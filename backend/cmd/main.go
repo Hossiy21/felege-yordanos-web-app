@@ -27,10 +27,18 @@ func main() {
 		api.GET("/departments", handlers.GetDepartmentsHandler)
 		api.POST("/departments", handlers.CreateDepartmentHandler)
 
-		//my letter
+		//get list of all letters
 		api.GET("/letters", handlers.GetLettersHandler)
+
+		//get list of letters by id
+		api.GET("/letters/:id", handlers.GetLetterHandlerById)
+
+		//to create new letter
 		api.POST("/letters", handlers.CreateLetterHandler)
+
+		//to update existing letter if approved
 		api.PUT("/letters/:id", handlers.UpdateLetterHandler)
+		api.DELETE("/letters/:id", handlers.DeleteLetterHandler)
 	}
 
 	fmt.Println("Server Started on http://localhost:8000")
