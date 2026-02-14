@@ -4,22 +4,43 @@ import (
 	"church-system/internal/models" // ሞዴሉን እንጠራዋለን
 	"context"
 	"fmt"
+	"log"
 	"os"
 
-	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/joho/godotenv"
 )
 
-var Conn *pgx.Conn
+var Conn *pgxpool.Pool
 
 func Connect() {
-	connString := "postgres://postgres@localhost:5432/church_management_db"
-	var err error
-	Conn, err = pgx.Connect(context.Background(), connString)
+	err := godotenv.Load()
 	if err != nil {
-		fmt.Fprintf(os.Stderr, "Unable to connect: %v\n", err)
-		os.Exit(1)
+		log.Println("Note : No .env filed found")
 	}
-	fmt.Println("ዳታቤዙ በስኬት ተገናኝቷል!")
+	user := os.Getenv("DB_USER")
+	pass := os.Getenv("DB_PASSWORD")
+	host := os.Getenv("DB_HOST")
+	port := os.Getenv("DB_PORT")
+	name := os.Getenv("DB_NAME")
+
+	dsn := fmt.Sprintf("postgres://%s:%s@%s:%s/%s", user, pass, host, port, name)
+
+	config, err := pgxpool.ParseConfig(dsn)
+	if err != nil {
+		log.Fatalf("Unable to parse connection string : %v \n", err)
+	}
+	var errConect error
+
+	Conn, errConect = pgxpool.NewWithConfig(context.Background(), config)
+	if errConect != nil {
+		log.Fatalf("Unable to connect to db: %v\n", err)
+	}
+	if err := Conn.Ping(context.Background()); err != nil {
+		log.Fatalf("DB unreacheable : %v\n", err)
+	}
+	fmt.Println("DB Connected")
+
 }
 
 // GetAllDepartments ሁሉንም የሥራ ክፍሎች ያመጣል
@@ -42,7 +63,7 @@ func GetAllDepartments() ([]models.Department, error) {
 	return depts, nil
 }
 func GetAllLetters() ([]models.Letter, error) {
-	// Column order: 0:id, 1:ref, 2:type, 3:subj, 4:status, 5:dep_id, 6:dep_name, 7:created, 8:updated
+	// Exactly 9 columns selected
 	query := `SELECT 
                 let.id, 
                 let.reference_number, 
@@ -50,11 +71,12 @@ func GetAllLetters() ([]models.Letter, error) {
                 let.subject, 
                 let.status, 
                 let.department_id, 
-                dep.dep_name, 
+                COALESCE(dep.dep_name, 'No Dept'), 
                 let.created_at, 
                 let.updated_at 
               FROM letters let 
-              LEFT JOIN departments dep ON dep.id = let.department_id`
+              LEFT JOIN departments dep ON dep.id = let.department_id 
+              WHERE let.deleted_at IS NULL`
 
 	rows, err := Conn.Query(context.Background(), query)
 	if err != nil {
@@ -62,10 +84,10 @@ func GetAllLetters() ([]models.Letter, error) {
 	}
 	defer rows.Close()
 
-	letters := []models.Letter{}
+	var letters []models.Letter
 	for rows.Next() {
 		var d models.Letter
-		// WE MUST SCAN INTO 9 VARIABLES TO MATCH THE 9 COLUMNS ABOVE
+		// Scan exactly 9 fields in the correct order
 		err := rows.Scan(
 			&d.ID,
 			&d.ReferenceNumber,
@@ -78,8 +100,8 @@ func GetAllLetters() ([]models.Letter, error) {
 			&d.UpdatedAt,
 		)
 		if err != nil {
-			fmt.Println("Scan error details:", err) // This will show in your terminal
-			return nil, err
+			fmt.Println("Admin Scan Error:", err)
+			continue
 		}
 		letters = append(letters, d)
 	}

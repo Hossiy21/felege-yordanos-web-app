@@ -3,7 +3,9 @@ package handlers
 import (
 	"church-system/internal/auth"
 	"church-system/internal/database"
+	"church-system/internal/middleware"
 	"church-system/internal/models"
+	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -99,4 +101,74 @@ func GetRolesHandler(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, gin.H{"roles": roles})
+}
+
+func GetAllUserHandler(c *gin.Context) {
+	query := `select id,email,role,created_at from users order by created_at desc`
+	ctx := c.Request.Context()
+	rows, err := database.Conn.Query(ctx, query)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch users."})
+		return
+	}
+	defer rows.Close()
+
+	type UserInfo struct {
+		ID        int    `json:"id"`
+		Email     string `json:"email"`
+		Role      string `json:"role"`
+		CreatedAt string `json:"created_at"`
+	}
+	var users []UserInfo
+	for rows.Next() {
+		var u UserInfo
+		var createdAt interface{}
+		if err := rows.Scan(&u.ID, &u.Email, &u.Role, &u.CreatedAt); err != nil {
+			continue
+		}
+		u.CreatedAt = fmt.Sprintf("%v", createdAt)
+		users = append(users, u)
+	}
+	c.JSON(http.StatusOK, users)
+}
+func UpdateUserRoleHandler(c *gin.Context) {
+	userID := c.Param("id") // want to get the id from the url
+	var input struct {
+		Role string `json:"role" binding:"required"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Role is needed"})
+		return
+	}
+	roleChecker := input.Role
+
+	if roleChecker != "admin" && roleChecker != "user" {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Only Admin or User to access this "})
+		return
+	}
+	query := `update users set role = $1,updated_at = now() where id = $2`
+	result, err := database.Conn.Exec(c.Request.Context(), query, input.Role, userID)
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Unable to update"})
+		return
+	}
+	if result.RowsAffected() == 0 {
+		c.JSON(http.StatusNotFound, gin.H{"error": "Users not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{"message": "User role updated"})
+}
+func GetMeHandler(c *gin.Context) {
+	email, emailExists := c.Get(middleware.EmailKey)
+	role, roleExists := c.Get(middleware.RoleKey)
+
+	if !emailExists || !roleExists {
+		c.JSON(http.StatusUnauthorized, gin.H{"error": "User not found"})
+		return
+	}
+	c.JSON(http.StatusOK, gin.H{
+		"email":  email,
+		"role":   role,
+		"status": "authenticated",
+	})
 }
