@@ -1,7 +1,8 @@
 "use client"
 
 import { createContext, useContext, useState, useCallback, useEffect, type ReactNode } from "react"
-import { useRouter } from "next/navigation"
+
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
 export interface User {
   id: string
@@ -15,150 +16,130 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   signIn: (email: string, password: string, remember?: boolean) => Promise<{ success: boolean; error?: string }>
-  signUp: (fullName: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => void
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
-const DEMO_USERS = [
-  {
-    id: "1",
-    fullName: "Admin User",
-    email: "admin@sst.org",
-    password: "admin123",
-    role: "Admin",
-    department: "Administration",
-  },
-  {
-    id: "2",
-    fullName: "Demo User",
-    email: "demo@sst.org",
-    password: "demo123",
-    role: "Management",
-    department: "Education",
-  },
-]
-
 const STORAGE_KEY = "sst_auth_user"
-const USERS_KEY = "sst_registered_users"
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-  const router = useRouter()
+  const [user, setUser] = useState<User | null>(() => {
+    if (typeof window === "undefined") return null
+    try {
+      const stored = localStorage.getItem(STORAGE_KEY) || sessionStorage.getItem(STORAGE_KEY)
+      return stored ? JSON.parse(stored) : null
+    } catch {
+      return null
+    }
+  })
 
+  const [isLoading, setIsLoading] = useState(true)
+
+  // Fetch the current user on mount to see if they still have a valid session cookie
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (stored) {
+    async function fetchSession() {
       try {
-        setUser(JSON.parse(stored))
-      } catch {
-        localStorage.removeItem(STORAGE_KEY)
+        const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+          credentials: "include", // Let browser auto-send the HttpOnly cookie
+        })
+
+        if (response.ok) {
+          const data = await response.json()
+          const backendUser = data.user
+          const userData: User = {
+            id: backendUser.id || backendUser.email,
+            fullName: backendUser.name || backendUser.email,
+            email: backendUser.email,
+            role: backendUser.role || "staff",
+            department: "",
+          }
+          setUser(userData)
+        } else {
+          // Cookie expired or missing. Clear user state.
+          setUser(null)
+          localStorage.removeItem(STORAGE_KEY)
+          sessionStorage.removeItem(STORAGE_KEY)
+        }
+      } catch (err) {
+        console.error("Session check failed:", err)
+      } finally {
+        setIsLoading(false)
       }
     }
-    setIsLoading(false)
-  }, [])
 
-  const getRegisteredUsers = useCallback(() => {
-    try {
-      const stored = localStorage.getItem(USERS_KEY)
-      return stored ? JSON.parse(stored) : []
-    } catch {
-      return []
-    }
+    fetchSession()
   }, [])
 
   const signIn = useCallback(
     async (email: string, password: string, remember?: boolean) => {
-      // Check demo users
-      const demoUser = DEMO_USERS.find(
-        (u) => u.email.toLowerCase() === email.toLowerCase() && u.password === password
-      )
+      setIsLoading(true)
+      try {
+        // We include credentials: 'include' so that the browser sends and receives the HttpOnly cookie
+        const response = await fetch(`${API_BASE_URL}/api/auth/login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+          credentials: "include",
+        })
 
-      if (demoUser) {
-        const { password: _, ...userData } = demoUser
-        setUser(userData)
-        if (remember) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
-        } else {
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
+        const data = await response.json()
+
+        if (!response.ok) {
+          return {
+            success: false,
+            error: data.error || "Invalid email or password",
+          }
         }
-        return { success: true }
-      }
 
-      // Check registered users
-      const registered = getRegisteredUsers()
-      const registeredUser = registered.find(
-        (u: { email: string; password: string }) =>
-          u.email.toLowerCase() === email.toLowerCase() && u.password === password
-      )
-
-      if (registeredUser) {
-        const { password: _, ...userData } = registeredUser
-        setUser(userData)
-        if (remember) {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
-        } else {
-          sessionStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
+        const backendUser = data.user
+        const userData: User = {
+          id: backendUser.id || email,
+          fullName: backendUser.name || email,
+          email: backendUser.email || email,
+          role: backendUser.role || "staff",
+          department: "",
         }
-        return { success: true }
-      }
 
-      return { success: false, error: "Invalid email or password" }
+        setUser(userData)
+
+        // Storing the user object only. The Token is safely hidden inside the browser's HttpOnly cookie!
+        const storage = remember ? localStorage : sessionStorage
+        storage.setItem(STORAGE_KEY, JSON.stringify(userData))
+
+        return { success: true }
+      } catch (err) {
+        console.error("Login error:", err)
+        return {
+          success: false,
+          error: "Unable to connect to the server. Please try again.",
+        }
+      } finally {
+        setIsLoading(false)
+      }
     },
-    [getRegisteredUsers]
+    []
   )
 
-  const signUp = useCallback(
-    async (fullName: string, email: string, password: string) => {
-      // Check if email exists in demo users
-      const existsInDemo = DEMO_USERS.some(
-        (u) => u.email.toLowerCase() === email.toLowerCase()
-      )
-      if (existsInDemo) {
-        return { success: false, error: "An account with this email already exists" }
-      }
+  const signOut = useCallback(async () => {
+    try {
+      // Tell backend to clear the HttpOnly cookie
+      await fetch(`${API_BASE_URL}/api/auth/logout`, {
+        method: "POST",
+        credentials: "include",
+      })
+    } catch (err) {
+      console.error("Logout failed:", err)
+    }
 
-      // Check registered users
-      const registered = getRegisteredUsers()
-      const existsInRegistered = registered.some(
-        (u: { email: string }) => u.email.toLowerCase() === email.toLowerCase()
-      )
-      if (existsInRegistered) {
-        return { success: false, error: "An account with this email already exists" }
-      }
-
-      const newUser = {
-        id: crypto.randomUUID(),
-        fullName,
-        email,
-        password,
-        role: "User",
-        department: "General",
-      }
-
-      registered.push(newUser)
-      localStorage.setItem(USERS_KEY, JSON.stringify(registered))
-
-      const { password: _, ...userData } = newUser
-      setUser(userData)
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
-
-      return { success: true }
-    },
-    [getRegisteredUsers]
-  )
-
-  const signOut = useCallback(() => {
     setUser(null)
     localStorage.removeItem(STORAGE_KEY)
     sessionStorage.removeItem(STORAGE_KEY)
-    router.push("/landing")
-  }, [router])
+    window.location.href = "/landing"
+  }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   )

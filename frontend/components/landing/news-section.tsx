@@ -3,17 +3,18 @@
 import { Calendar, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { getAllNews, type NewsArticle } from "@/lib/news-store"
 
 export function NewsSection() {
-    const [articles, setArticles] = useState<NewsArticle[]>([])
-
-    useEffect(() => {
-        setArticles(getAllNews().slice(0, 3)) // Show latest 3 on landing page
-    }, [])
-
-    if (articles.length === 0) return null
+    const [articles, setArticles] = useState<NewsArticle[]>(() => {
+        // Initialize with data immediately to avoid flash of empty content
+        try {
+            return getAllNews().slice(0, 3)
+        } catch {
+            return []
+        }
+    })
 
     return (
         <section id="news" className="py-24 bg-muted/30">

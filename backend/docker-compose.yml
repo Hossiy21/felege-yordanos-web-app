@@ -1,0 +1,28 @@
+version: "3.9"
+
+services:
+  # PostgreSQL
+  auth-db:
+    image: postgres:15-alpine
+    container_name: church-auth-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_db_data:/var/lib/postgresql/data
+
+  # MongoDB
+  content-db:
+    image: mongo:latest
+    container_name: church-content-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  auth_db_data:
+  mongo_data:

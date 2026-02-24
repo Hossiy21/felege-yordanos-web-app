@@ -8,30 +8,19 @@ import { notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft, Calendar } from "lucide-react"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import type { NewsArticle } from "@/lib/news-store"
 
 export default function NewsDetailPage() {
     const params = useParams()
     const slug = params.slug as string
-    const [article, setArticle] = useState<NewsArticle | null>(null)
-    const [loading, setLoading] = useState(true)
-
-    useEffect(() => {
-        const found = getNewsBySlug(slug)
-        if (found) {
-            setArticle(found)
+    const [article] = useState<NewsArticle | null>(() => {
+        try {
+            return getNewsBySlug(slug) ?? null
+        } catch {
+            return null
         }
-        setLoading(false)
-    }, [slug])
-
-    if (loading) {
-        return (
-            <div className="min-h-screen bg-background flex items-center justify-center">
-                <div className="h-8 w-8 animate-spin rounded-full border-4 border-muted border-t-primary" />
-            </div>
-        )
-    }
+    })
 
     if (!article) {
         notFound()

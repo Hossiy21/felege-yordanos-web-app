@@ -1,0 +1,52 @@
+services:
+  # DATABASE 1: PostgreSQL
+  auth-db:
+    image: postgres:15-alpine
+    container_name: church-auth-db
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: password123
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+
+  # DATABASE 2: MongoDB
+  content-db:
+    image: mongo:latest
+    container_name: church-content-db
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+  # --- Go Services (Indented 2 spaces) ---
+  gateway-service:
+    build: ./services/gateway-service
+    ports:
+      - "8000:8000"
+    depends_on:
+      - auth-service
+      - news-service
+      - letter-service
+
+  auth-service:
+    build: ./services/auth-service
+    environment:
+      - PORT=8080
+    depends_on:
+      - auth-db
+
+  news-service:
+    build: ./services/news-service
+    environment:
+      - PORT=8081
+    depends_on:
+      - content-db
+
+  letter-service:
+    build: ./services/letter-service
+    depends_on:
+      - content-db
+
+volumes:
+  mongo_data:

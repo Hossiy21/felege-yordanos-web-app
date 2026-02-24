@@ -5,15 +5,17 @@ import { LandingFooter } from "@/components/landing/landing-footer"
 import { Calendar, ArrowRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useEffect, useState } from "react"
+import { useState } from "react"
 import { getAllNews, type NewsArticle } from "@/lib/news-store"
 
 export default function NewsPage() {
-    const [articles, setArticles] = useState<NewsArticle[]>([])
-
-    useEffect(() => {
-        setArticles(getAllNews())
-    }, [])
+    const [articles, setArticles] = useState<NewsArticle[]>(() => {
+        try {
+            return getAllNews()
+        } catch {
+            return []
+        }
+    })
 
     return (
         <div className="min-h-screen bg-background">

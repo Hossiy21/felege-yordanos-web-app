@@ -8,7 +8,8 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
-import { ZoomIn, ZoomOut, RotateCw, Download, Loader2, AlertCircle, X } from "lucide-react"
+import { ZoomIn, ZoomOut, RotateCw, Download, Loader2, AlertCircle, X, FileText } from "lucide-react"
+import { Separator } from "@/components/ui/separator"
 
 interface PdfViewerModalProps {
   open: boolean
@@ -56,82 +57,94 @@ export function PdfViewerModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-4xl w-[95vw] h-[90vh] flex flex-col p-0 gap-0">
-        <DialogHeader className="flex flex-row items-center justify-between px-6 py-4 border-b border-border shrink-0">
-          <div className="flex flex-col gap-0.5 pr-8">
-            <DialogTitle className="text-base font-semibold text-foreground">
-              {title}
-            </DialogTitle>
-            <p className="text-xs font-mono text-muted-foreground">{reference}</p>
-          </div>
-        </DialogHeader>
+      <DialogContent className="max-w-5xl w-[95vw] h-[95vh] flex flex-col p-0 gap-0 overflow-hidden bg-zinc-950 border-zinc-800">
 
-        {/* Toolbar */}
-        <div className="flex items-center justify-between px-4 py-2 bg-muted/50 border-b border-border shrink-0">
-          <div className="flex items-center gap-1">
+        {/* Header - Dark Theme */}
+        <div className="flex items-center justify-between px-4 py-3 bg-zinc-900 border-b border-zinc-800 shrink-0 text-zinc-100">
+          <div className="flex items-center gap-3 overflow-hidden">
+            <div className="h-8 w-8 rounded bg-zinc-800 flex items-center justify-center shrink-0">
+              <FileText className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="flex flex-col gap-0.5 min-w-0">
+              <h3 className="text-sm font-semibold truncate leading-none">{title}</h3>
+              <p className="text-[10px] font-mono text-zinc-400 truncate">{reference}</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 pl-4">
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 h-8 w-8 rounded-full"
+              onClick={() => handleOpenChange(false)}
+            >
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+
+        {/* Toolbar */}
+        <div className="flex items-center justify-between px-4 py-2 bg-zinc-900/50 border-b border-zinc-800/50 shrink-0 backdrop-blur-sm">
+          <div className="flex items-center gap-1 bg-zinc-900 rounded-md border border-zinc-800 p-0.5 shadow-sm">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-7 w-7 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
               onClick={handleZoomOut}
               disabled={zoom <= 50}
-              aria-label="Zoom out"
             >
-              <ZoomOut className="h-4 w-4" />
+              <ZoomOut className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-xs font-medium text-muted-foreground min-w-[48px] text-center">
+            <span className="text-[10px] font-mono font-medium text-zinc-300 min-w-[40px] text-center select-none">
               {zoom}%
             </span>
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-7 w-7 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
               onClick={handleZoomIn}
               disabled={zoom >= 200}
-              aria-label="Zoom in"
             >
-              <ZoomIn className="h-4 w-4" />
+              <ZoomIn className="h-3.5 w-3.5" />
             </Button>
-            <div className="w-px h-5 bg-border mx-1" />
+            <Separator orientation="vertical" className="h-4 mx-1 bg-zinc-700" />
             <Button
               variant="ghost"
               size="icon"
-              className="h-8 w-8"
+              className="h-7 w-7 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800"
               onClick={handleReset}
-              aria-label="Reset zoom"
             >
-              <RotateCw className="h-4 w-4" />
+              <RotateCw className="h-3.5 w-3.5" />
             </Button>
           </div>
-          <div className="flex items-center gap-1">
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 gap-2 text-xs"
-              asChild
-            >
-              <a href={pdfUrl} download target="_blank" rel="noopener noreferrer">
-                <Download className="h-3.5 w-3.5" />
-                Download
-              </a>
-            </Button>
-          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            className="h-8 gap-2 text-xs bg-zinc-900 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:text-white"
+            asChild
+          >
+            <a href={pdfUrl} download target="_blank" rel="noopener noreferrer">
+              <Download className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Download</span>
+            </a>
+          </Button>
         </div>
 
         {/* PDF Content */}
-        <div className="flex-1 overflow-auto bg-muted/30 relative">
+        <div className="flex-1 overflow-auto bg-zinc-950 relative flex justify-center p-8">
           {loading && !error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 bg-background/80">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">Loading document...</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 bg-zinc-950/80 backdrop-blur-sm">
+              <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
+              <p className="text-sm text-zinc-400">Loading document...</p>
             </div>
           )}
 
           {error && (
-            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10">
-              <AlertCircle className="h-8 w-8 text-destructive" />
-              <p className="text-sm font-medium text-foreground">Failed to load document</p>
-              <p className="text-xs text-muted-foreground">The PDF could not be rendered. Try downloading instead.</p>
+            <div className="absolute inset-0 flex flex-col items-center justify-center gap-3 z-10 p-4 text-center">
+              <div className="bg-red-500/10 p-4 rounded-full">
+                <AlertCircle className="h-8 w-8 text-red-500" />
+              </div>
+              <p className="text-sm font-medium text-zinc-200">Failed to load document</p>
               <Button variant="outline" size="sm" className="gap-2 mt-2" asChild>
                 <a href={pdfUrl} download target="_blank" rel="noopener noreferrer">
                   <Download className="h-3.5 w-3.5" />
@@ -142,17 +155,16 @@ export function PdfViewerModal({
           )}
 
           <div
-            className="flex justify-center p-4 min-h-full"
+            className="shadow-2xl transition-transform duration-200 ease-out origin-top"
             style={{
               transform: `scale(${zoom / 100})`,
-              transformOrigin: "top center",
-              transition: "transform 0.2s ease",
+              width: '100%',
+              maxWidth: '800px',
             }}
           >
             <iframe
               src={`${pdfUrl}#toolbar=0&navpanes=0`}
-              className="w-full max-w-3xl bg-card rounded shadow-sm border border-border"
-              style={{ height: "calc(90vh - 140px)", minHeight: "500px" }}
+              className="w-full bg-white min-h-[1100px] border-none"
               title={`PDF: ${title}`}
               onLoad={handleLoad}
               onError={handleError}

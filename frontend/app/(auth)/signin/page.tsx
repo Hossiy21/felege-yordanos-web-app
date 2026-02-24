@@ -45,16 +45,6 @@ export default function SignInPage() {
     }
   }
 
-  const handleDemoLogin = async () => {
-    setLoading(true)
-    setError("")
-    const result = await signIn("admin@sst.org", "admin123", false)
-    setLoading(false)
-    if (result.success) {
-      router.push("/dashboard")
-    }
-  }
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
@@ -140,39 +130,7 @@ export default function SignInPage() {
                 <LogIn className="h-4 w-4" />
                 {loading ? "Signing in..." : "Sign In"}
               </Button>
-
-              <div className="relative my-2">
-                <div className="absolute inset-0 flex items-center">
-                  <span className="w-full border-t border-border" />
-                </div>
-                <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-card px-2 text-muted-foreground">or</span>
-                </div>
-              </div>
-
-              <Button
-                type="button"
-                variant="outline"
-                onClick={handleDemoLogin}
-                disabled={loading}
-                className="w-full"
-              >
-                Try Demo Account
-              </Button>
-
-              <div className="rounded-md bg-muted p-3 text-xs text-muted-foreground">
-                <p className="font-semibold mb-1">Demo Credentials:</p>
-                <p>Email: admin@sst.org</p>
-                <p>Password: admin123</p>
-              </div>
             </form>
-
-            <p className="text-center text-sm text-muted-foreground mt-6">
-              {"Don't have an account? "}
-              <Link href="/signup" className="text-[hsl(40,90%,40%)] font-medium hover:underline">
-                Sign Up
-              </Link>
-            </p>
           </CardContent>
         </Card>
       </div>

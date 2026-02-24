@@ -2,12 +2,13 @@
 
 import Link from "next/link"
 import { useState } from "react"
+import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Menu, X } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 
 const navLinks = [
-  { label: "Home", href: "/landing" },
+  { label: "Home", href: "/home" },
   { label: "About", href: "/about" },
   { label: "News & Events", href: "/news" },
   { label: "Gallery", href: "/gallery" },
@@ -17,13 +18,13 @@ const navLinks = [
 
 export function LandingNav() {
   const [mobileOpen, setMobileOpen] = useState(false)
-  const pathname = typeof window !== 'undefined' ? window.location.pathname : ''
+  const pathname = usePathname()
 
   return (
     <header className="sticky top-0 z-50 bg-white dark:bg-[#003366] backdrop-blur-md border-b border-border dark:border-white/10 transition-colors duration-300">
       <div className="mx-auto max-w-7xl flex items-center justify-between px-6 h-16">
         {/* Logo */}
-        <Link href="/landing" className="flex items-center gap-3">
+        <Link href="/home" className="flex items-center gap-3">
           <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#003366] dark:bg-white text-white dark:text-[#003366] font-bold text-xs shadow-lg">
             FY
           </div>
@@ -39,8 +40,8 @@ export function LandingNav() {
                 key={link.href}
                 href={link.href}
                 className={`px-4 py-2 text-sm font-bold transition-all relative group ${isActive
-                    ? 'text-[#003366] dark:text-white'
-                    : 'text-muted-foreground hover:text-[#003366] dark:text-white/80 dark:hover:text-white'
+                  ? 'text-[#003366] dark:text-white'
+                  : 'text-muted-foreground hover:text-[#003366] dark:text-white/80 dark:hover:text-white'
                   }`}
               >
                 {link.label}

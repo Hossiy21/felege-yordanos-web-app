@@ -14,62 +14,15 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-const users = [
-  {
-    name: "Admin User",
-    email: "admin@sst.org",
-    role: "Admin",
-    department: "Administration",
-    status: "Active",
-    lastLogin: "Feb 8, 2026",
-    initials: "AU",
-  },
-  {
-    name: "Abebe Tadesse",
-    email: "abebe@sst.org",
-    role: "Management",
-    department: "Education",
-    status: "Active",
-    lastLogin: "Feb 8, 2026",
-    initials: "AT",
-  },
-  {
-    name: "Sara Mekonnen",
-    email: "sara@sst.org",
-    role: "Approver",
-    department: "Finance",
-    status: "Active",
-    lastLogin: "Feb 7, 2026",
-    initials: "SM",
-  },
-  {
-    name: "Daniel Kebede",
-    email: "daniel@sst.org",
-    role: "Executive",
-    department: "Administration",
-    status: "Active",
-    lastLogin: "Feb 6, 2026",
-    initials: "DK",
-  },
-  {
-    name: "Helen Girma",
-    email: "helen@sst.org",
-    role: "Audit",
-    department: "Administration",
-    status: "Active",
-    lastLogin: "Feb 5, 2026",
-    initials: "HG",
-  },
-  {
-    name: "Kidus Alemayehu",
-    email: "kidus@sst.org",
-    role: "Management",
-    department: "Education",
-    status: "Inactive",
-    lastLogin: "Jan 20, 2026",
-    initials: "KA",
-  },
-]
+export interface User {
+  name: string
+  email: string
+  role: string
+  department: string
+  status: "Active" | "Inactive"
+  lastLogin?: string
+  initials?: string
+}
 
 function getRoleColor(role: string) {
   switch (role) {
@@ -88,7 +41,7 @@ function getRoleColor(role: string) {
   }
 }
 
-export function UsersTable() {
+export function UsersTable({ users }: { users: User[] }) {
   const [search, setSearch] = useState("")
   const [role, setRole] = useState("all")
 
@@ -124,6 +77,7 @@ export function UsersTable() {
             <SelectItem value="Approver">Approver</SelectItem>
             <SelectItem value="Executive">Executive</SelectItem>
             <SelectItem value="Audit">Audit</SelectItem>
+            <SelectItem value="Staff">Staff</SelectItem>
           </SelectContent>
         </Select>
       </div>
@@ -133,96 +87,101 @@ export function UsersTable() {
         <div className="overflow-x-auto">
           <table className="w-full">
             <thead>
-              <tr className="border-b border-border">
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+              <tr className="border-b border-border bg-muted/40">
+                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3 uppercase tracking-wider">
                   User
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3 uppercase tracking-wider">
                   Role
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3 uppercase tracking-wider">
                   Department
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3 uppercase tracking-wider">
                   Status
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3 uppercase tracking-wider">
                   Last Login
                 </th>
-                <th className="text-right text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="text-right text-xs font-semibold text-muted-foreground px-5 py-3 uppercase tracking-wider">
                   <span className="sr-only">Actions</span>
                 </th>
               </tr>
             </thead>
             <tbody>
-              {filtered.map((user) => (
-                <tr
-                  key={user.email}
-                  className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors"
-                >
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-3">
-                      <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-primary text-primary-foreground text-xs font-semibold">
-                          {user.initials}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium text-foreground">
-                          {user.name}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {user.email}
-                        </span>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4">
-                    <Badge
-                      variant="outline"
-                      className={`text-xs ${getRoleColor(user.role)}`}
-                    >
-                      {user.role}
-                    </Badge>
-                  </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
-                    {user.department}
-                  </td>
-                  <td className="px-5 py-4">
-                    <div className="flex items-center gap-1.5">
-                      <span
-                        className={`h-2 w-2 rounded-full ${
-                          user.status === "Active"
-                            ? "bg-emerald-500"
-                            : "bg-gray-400"
-                        }`}
-                      />
-                      <span
-                        className={`text-sm ${
-                          user.status === "Active"
-                            ? "text-emerald-600"
-                            : "text-muted-foreground"
-                        }`}
-                      >
-                        {user.status}
-                      </span>
-                    </div>
-                  </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
-                    {user.lastLogin}
-                  </td>
-                  <td className="px-5 py-4 text-right">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-8 w-8 p-0"
-                      aria-label={`More options for ${user.name}`}
-                    >
-                      <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
-                    </Button>
+              {filtered.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="text-center py-8 text-muted-foreground text-sm">
+                    No users found.
                   </td>
                 </tr>
-              ))}
+              ) : (
+                filtered.map((user) => (
+                  <tr
+                    key={user.email}
+                    className="border-b border-border last:border-b-0 hover:bg-muted/30 transition-colors group"
+                  >
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-3">
+                        <Avatar className="h-9 w-9 border border-border">
+                          <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold uppercase">
+                            {user.initials || user.name.slice(0, 2).toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium text-foreground">
+                            {user.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground">
+                            {user.email}
+                          </span>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4">
+                      <Badge
+                        variant="outline"
+                        className={`text-xs font-normal ${getRoleColor(user.role)}`}
+                      >
+                        {user.role}
+                      </Badge>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground">
+                      {user.department}
+                    </td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1.5">
+                        <span
+                          className={`h-2 w-2 rounded-full ${user.status === "Active"
+                              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                              : "bg-gray-400"
+                            }`}
+                        />
+                        <span
+                          className={`text-sm font-medium ${user.status === "Active"
+                              ? "text-emerald-600 dark:text-emerald-500"
+                              : "text-muted-foreground"
+                            }`}
+                        >
+                          {user.status}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-sm text-muted-foreground font-mono">
+                      {user.lastLogin || "Never"}
+                    </td>
+                    <td className="px-5 py-4 text-right">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-8 w-8 p-0 opacity-0 group-hover:opacity-100 transition-opacity"
+                        aria-label={`More options for ${user.name}`}
+                      >
+                        <MoreHorizontal className="h-4 w-4 text-muted-foreground" />
+                      </Button>
+                    </td>
+                  </tr>
+                )))}
             </tbody>
           </table>
         </div>

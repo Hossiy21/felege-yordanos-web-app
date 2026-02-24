@@ -27,8 +27,8 @@ const navSections = [
   {
     label: "LETTER MANAGEMENT",
     items: [
-      { name: "Incoming (\u1308\u1262)", href: "/letters/incoming", icon: Mail },
-      { name: "Outgoing (\u12C8\u1322)", href: "/letters/outgoing", icon: Send },
+      { name: "Incoming ", href: "/letters/incoming", icon: Mail },
+      { name: "Outgoing", href: "/letters/outgoing", icon: Send },
     ],
   },
   {

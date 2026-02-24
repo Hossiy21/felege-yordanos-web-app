@@ -1,8 +1,12 @@
-import { LetterTable } from "@/components/letters/letter-table"
+"use client"
+
+import { useState } from "react"
+import { LetterTable, type Letter } from "@/components/letters/letter-table"
+import { NewLetterDialog } from "@/components/letters/new-letter-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
 
-const outgoingLetters = [
+const initialLetters: Letter[] = [
   {
     reference: "SST/EDU/001/2026",
     subject: "Annual Report Submission to Diocese",
@@ -46,23 +50,43 @@ const outgoingLetters = [
 ]
 
 export default function OutgoingLettersPage() {
+  const [letters, setLetters] = useState<Letter[]>(initialLetters)
+  const [dialogOpen, setDialogOpen] = useState(false)
+
+  const handleNewLetter = (letter: Letter) => {
+    setLetters((prev) => [letter, ...prev])
+  }
+
+  // Collect all existing references to ensure uniqueness
+  const existingRefs = letters.map((l) => l.reference)
+
   return (
     <div className="flex flex-col gap-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground text-balance">
-            {"Outgoing Letters (\u12C8\u1322)"}
+            {"Outgoing Letters"}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
             Draft, approve, and send letters
           </p>
         </div>
-        <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button
+          className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90"
+          onClick={() => setDialogOpen(true)}
+        >
           <Plus className="h-4 w-4" />
           New Letter
         </Button>
       </div>
-      <LetterTable letters={outgoingLetters} type="outgoing" />
+      <LetterTable letters={letters} type="outgoing" />
+
+      <NewLetterDialog
+        open={dialogOpen}
+        onOpenChange={setDialogOpen}
+        onSubmit={handleNewLetter}
+        existingReferences={existingRefs}
+      />
     </div>
   )
 }
