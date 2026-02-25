@@ -1,47 +1,46 @@
-import { BookOpen, Users, Globe, Heart } from "lucide-react"
+"use client"
 
-const values = [
-  {
-    icon: BookOpen,
-    title: "Religious Education",
-    description:
-      "Teaching the scriptures and traditions of the Ethiopian Orthodox Tewahedo Church to all generations.",
-  },
-  {
-    icon: Users,
-    title: "Community Growth",
-    description:
-      "Fostering a strong sense of community and fellowship among our Sunday School members.",
-  },
-  {
-    icon: Heart,
-    title: "Spiritual Service",
-    description:
-      "Encouraging our members to serve others through charity and spiritual dedication.",
-  },
-  {
-    icon: Globe,
-    title: "Cultural Heritage",
-    description:
-      "Preserving and celebrating the deep spiritual and cultural roots of our faith.",
-  },
-]
+import { BookOpen, Users, Globe, Heart } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 export function AboutSection() {
+  const { t } = useTranslation()
+
+  const values = [
+    {
+      icon: BookOpen,
+      title: t("religious_education"),
+      description: t("religious_education_desc"),
+    },
+    {
+      icon: Users,
+      title: t("community_growth"),
+      description: t("community_growth_desc"),
+    },
+    {
+      icon: Heart,
+      title: t("spiritual_service"),
+      description: t("spiritual_service_desc"),
+    },
+    {
+      icon: Globe,
+      title: t("cultural_heritage"),
+      description: t("cultural_heritage_desc"),
+    },
+  ]
+
   return (
     <section id="about" className="py-20 lg:py-28 bg-muted/50">
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center mb-16">
           <p className="text-sm font-semibold uppercase tracking-wider text-[hsl(40,90%,45%)] mb-3">
-            About Us
+            {t("about_us_label")}
           </p>
           <h2 className="text-3xl font-bold text-foreground sm:text-4xl text-balance">
-            Our Sunday School's Mission
+            {t("our_mission")}
           </h2>
           <p className="mt-4 max-w-3xl mx-auto text-muted-foreground leading-relaxed">
-            Felege Yordanos Sunday School at Bole Debre Salem Medhanealem Cathedral is dedicated to
-            providing spiritual guidance, religious education, and community service while preserving
-            the rich traditions of the Ethiopian Orthodox Tewahedo Church.
+            {t("about_description")}
           </p>
         </div>
 

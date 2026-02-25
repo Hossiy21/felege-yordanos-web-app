@@ -13,21 +13,12 @@ export default function GalleryPage() {
         <div className="min-h-screen bg-background">
             <LandingNav />
             <main>
-                <div className="bg-[#003366] py-16 text-white border-b border-white/10">
-                    <div className="mx-auto max-w-6xl px-6">
-                        <h1 className="text-4xl font-bold mb-4">Our Gallery</h1>
-                        <p className="text-lg text-white/70">Capturing the beauty of our faith and fellowship.</p>
-                    </div>
-                </div>
-
-                <GallerySection />
-
-                {/* Potentially categories or more images */}
-                <section className="py-12 bg-muted/20">
-                    <div className="mx-auto max-w-6xl px-6 text-center">
-                        <p className="text-muted-foreground italic">"Give thanks to the LORD, for he is good; his love endures forever." - Psalm 107:1</p>
-                    </div>
-                </section>
+                {/* 
+                    Removed the redundant dark blue header. 
+                    GallerySection now handles its own Hero/Title presentation 
+                    efficiently for a production-ready dedicated page.
+                */}
+                <GallerySection isDedicatedPage={true} />
             </main>
             <LandingFooter />
         </div>

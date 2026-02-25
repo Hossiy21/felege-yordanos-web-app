@@ -1,7 +1,10 @@
+"use client"
+
 import { Mail } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { useTranslation } from "react-i18next"
 
 const letters = [
   {
@@ -59,17 +62,19 @@ function getStatusVariant(status: string) {
 }
 
 export function RecentLetters() {
+  const { t } = useTranslation()
+
   return (
     <Card className="border border-border">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-base font-semibold text-foreground">
-          Recent Letters
+          {t("recent_letters")}
         </CardTitle>
         <Link
           href="/letters/outgoing"
           className="text-sm font-medium text-info hover:underline"
         >
-          {"View all \u2192"}
+          {t("view_all")}
         </Link>
       </CardHeader>
       <CardContent className="flex flex-col gap-0 pt-0">

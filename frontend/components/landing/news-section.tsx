@@ -5,8 +5,10 @@ import { Button } from "@/components/ui/button"
 import Link from "next/link"
 import { useState } from "react"
 import { getAllNews, type NewsArticle } from "@/lib/news-store"
+import { useTranslation } from "react-i18next"
 
 export function NewsSection() {
+    const { t } = useTranslation()
     const [articles, setArticles] = useState<NewsArticle[]>(() => {
         // Initialize with data immediately to avoid flash of empty content
         try {
@@ -22,15 +24,15 @@ export function NewsSection() {
                 <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-12">
                     <div>
                         <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
-                            News & Events
+                            {t("news_events_title")}
                         </h2>
                         <p className="mt-4 text-lg text-muted-foreground">
-                            Stay updated with the latest happenings in our Sunday School.
+                            {t("news_subtitle")}
                         </p>
                     </div>
                     <Link href="/news">
                         <Button variant="outline" className="hidden md:flex gap-2">
-                            View All News
+                            {t("view_all_news")}
                             <ArrowRight className="h-4 w-4" />
                         </Button>
                     </Link>
@@ -64,7 +66,7 @@ export function NewsSection() {
                                             variant="link"
                                             className="p-0 h-auto text-primary font-semibold text-sm gap-2"
                                         >
-                                            Read More
+                                            {t("read_more")}
                                             <ArrowRight className="h-3 w-3" />
                                         </Button>
                                     </Link>
@@ -76,7 +78,7 @@ export function NewsSection() {
 
                 <Link href="/news" className="block md:hidden">
                     <Button variant="outline" className="w-full mt-8 gap-2">
-                        View All News
+                        {t("view_all_news")}
                         <ArrowRight className="h-4 w-4" />
                     </Button>
                 </Link>

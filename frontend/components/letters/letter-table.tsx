@@ -13,6 +13,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { PdfViewerModal } from "@/components/letters/pdf-viewer-modal"
+import { useTranslation } from "react-i18next"
 
 export interface Letter {
   reference: string
@@ -21,6 +22,7 @@ export interface Letter {
   status: string
   date: string
   assigned: string
+  pdfUrl?: string
 }
 
 function getStatusVariant(status: string) {
@@ -46,6 +48,7 @@ interface LetterTableProps {
 }
 
 export function LetterTable({ letters, type }: LetterTableProps) {
+  const { t } = useTranslation()
   const [search, setSearch] = useState("")
   const [department, setDepartment] = useState("all")
   const [status, setStatus] = useState("all")
@@ -75,7 +78,7 @@ export function LetterTable({ letters, type }: LetterTableProps) {
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search by subject or reference..."
+            placeholder={t("search_placeholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -83,10 +86,10 @@ export function LetterTable({ letters, type }: LetterTableProps) {
         </div>
         <Select value={department} onValueChange={setDepartment}>
           <SelectTrigger className="w-[150px]">
-            <SelectValue placeholder="Department" />
+            <SelectValue placeholder={t("department")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Department</SelectItem>
+            <SelectItem value="all">{t("department")}</SelectItem>
             <SelectItem value="Education">Education</SelectItem>
             <SelectItem value="Finance">Finance</SelectItem>
             <SelectItem value="Administration">Administration</SelectItem>
@@ -94,10 +97,10 @@ export function LetterTable({ letters, type }: LetterTableProps) {
         </Select>
         <Select value={status} onValueChange={setStatus}>
           <SelectTrigger className="w-[130px]">
-            <SelectValue placeholder="Status" />
+            <SelectValue placeholder={t("status")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Status</SelectItem>
+            <SelectItem value="all">{t("status")}</SelectItem>
             <SelectItem value="Draft">Draft</SelectItem>
             <SelectItem value="Pending">Pending</SelectItem>
             <SelectItem value="Approved">Approved</SelectItem>
@@ -107,11 +110,11 @@ export function LetterTable({ letters, type }: LetterTableProps) {
         </Select>
         <Button variant="outline" className="gap-2">
           <Filter className="h-4 w-4" />
-          More Filters
+          {t("more_filters")}
         </Button>
         <Button variant="outline" className="gap-2">
           <Download className="h-4 w-4" />
-          Export
+          {t("export")}
         </Button>
       </div>
 
@@ -122,25 +125,25 @@ export function LetterTable({ letters, type }: LetterTableProps) {
             <thead>
               <tr className="border-b border-border">
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
-                  Reference
+                  {t("reference")}
                 </th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
-                  Subject
+                  {t("subject_label")}
                 </th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
-                  Department
+                  {t("department")}
                 </th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
-                  Status
+                  {t("status")}
                 </th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
-                  Date
+                  {t("date")}
                 </th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
-                  Assigned
+                  {t("assigned")}
                 </th>
                 <th className="text-right text-xs font-semibold text-muted-foreground px-5 py-3">
-                  Actions
+                  {t("actions")}
                 </th>
               </tr>
             </thead>
@@ -186,7 +189,7 @@ export function LetterTable({ letters, type }: LetterTableProps) {
                       onClick={() => handleViewPdf(letter)}
                     >
                       <Eye className="h-3.5 w-3.5" />
-                      View
+                      {t("view")}
                     </Button>
                   </td>
                 </tr>
@@ -198,17 +201,17 @@ export function LetterTable({ letters, type }: LetterTableProps) {
         {/* Pagination */}
         <div className="flex items-center justify-between px-5 py-3 border-t border-border">
           <p className="text-xs text-muted-foreground">
-            Showing {filtered.length} of {letters.length} results
+            {t("showing")} {filtered.length} {t("of")} {letters.length} {t("results")}
           </p>
           <div className="flex items-center gap-1">
             <Button variant="outline" size="sm" className="text-xs h-8">
-              Previous
+              {t("previous")}
             </Button>
             <Button size="sm" className="text-xs h-8 bg-primary text-primary-foreground">
               1
             </Button>
             <Button variant="outline" size="sm" className="text-xs h-8">
-              Next
+              {t("next_pagination")}
             </Button>
           </div>
         </div>
@@ -219,7 +222,7 @@ export function LetterTable({ letters, type }: LetterTableProps) {
         <PdfViewerModal
           open={pdfOpen}
           onOpenChange={setPdfOpen}
-          pdfUrl={`/sample-letter.pdf`}
+          pdfUrl={selectedLetter.pdfUrl ? (selectedLetter.pdfUrl.startsWith('http') ? selectedLetter.pdfUrl : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}${selectedLetter.pdfUrl}`) : `/sample-letter.pdf`}
           title={selectedLetter.subject}
           reference={selectedLetter.reference}
         />

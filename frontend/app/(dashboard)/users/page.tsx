@@ -5,6 +5,7 @@ import { UsersTable, type User } from "@/components/users/users-table"
 import { AddUserDialog } from "@/components/users/add-user-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus } from "lucide-react"
+import { useTranslation } from "react-i18next"
 
 const INITIAL_USERS: User[] = [
   {
@@ -64,6 +65,7 @@ const INITIAL_USERS: User[] = [
 ]
 
 export default function UserManagementPage() {
+  const { t } = useTranslation()
   const [users, setUsers] = useState<User[]>(INITIAL_USERS)
 
   const handleAddUser = (newUser: Omit<User, "lastLogin" | "initials" | "status">) => {
@@ -81,16 +83,16 @@ export default function UserManagementPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-foreground text-balance">
-            User Management
+            {t("user_mgmt_title")}
           </h1>
           <p className="text-muted-foreground text-sm mt-1">
-            Manage system users and role assignments
+            {t("user_mgmt_desc")}
           </p>
         </div>
         <AddUserDialog onAddUser={handleAddUser}>
           <Button className="gap-2 bg-primary text-primary-foreground hover:bg-primary/90">
             <Plus className="h-4 w-4" />
-            Add User
+            {t("add_user")}
           </Button>
         </AddUserDialog>
       </div>

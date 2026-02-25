@@ -1,53 +1,61 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { LetterTable, type Letter } from "@/components/letters/letter-table"
 import { RegisterIncomingDialog } from "@/components/letters/register-incoming-dialog"
 import { Button } from "@/components/ui/button"
 import { Plus, Mail, Clock, AlertCircle, Archive, Inbox } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-
-const initialLetters: Letter[] = [
-  {
-    reference: "SST/ADM/012/2026",
-    subject: "Invitation Letter from Diocese Office",
-    department: "Administration",
-    status: "Archived",
-    date: "Feb 6, 2026",
-    assigned: "Daniel K.",
-  },
-  {
-    reference: "SST/ADM/013/2026",
-    subject: "Facility Maintenance Request",
-    department: "Administration",
-    status: "Approved",
-    date: "Feb 3, 2026",
-    assigned: "Helen G.",
-  },
-  {
-    reference: "SST/FIN/005/2026",
-    subject: "Financial Audit Preparation Notice",
-    department: "Finance",
-    status: "Draft",
-    date: "Feb 1, 2026",
-    assigned: "Sara M.",
-  },
-  {
-    reference: "SST/edu/032/2026",
-    subject: "Curriculum Update Report",
-    department: "Education",
-    status: "Pending",
-    date: "Feb 8, 2026",
-    assigned: "Markos T.",
-  },
-]
+import { useTranslation } from "react-i18next"
 
 export default function IncomingLettersPage() {
-  const [letters, setLetters] = useState<Letter[]>(initialLetters)
+  const { t } = useTranslation()
+  const [letters, setLetters] = useState<Letter[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
 
+  const fetchLetters = useCallback(async () => {
+    setIsLoading(true)
+    setError(null)
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters`, {
+        credentials: "include",
+      })
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch letters")
+      }
+
+      const data = await response.json()
+
+      // Transform backend data to frontend format
+      const transformed: Letter[] = data.map((item: any) => ({
+        reference: item.reference_number || "—",
+        subject: item.subject || "No Subject",
+        department: item.department_name || "General",
+        status: item.status.charAt(0).toUpperCase() + item.status.slice(1), // Capitalize first letter
+        date: new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        assigned: item.owner_email || "Unassigned",
+        pdfUrl: item.pdf_url,
+      }))
+
+      setLetters(transformed)
+    } catch (err) {
+      console.error("Fetch failed:", err)
+      setError("Unable to load correspondence records.")
+    } finally {
+      setIsLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    fetchLetters()
+  }, [fetchLetters])
+
   const handleRegisterLetter = (letter: Letter) => {
+    // Optimistic update or refresh
     setLetters((prev) => [letter, ...prev])
   }
 
@@ -55,7 +63,7 @@ export default function IncomingLettersPage() {
   const stats = {
     total: letters.length,
     pending: letters.filter(l => l.status === "Pending").length,
-    urgent: letters.filter(l => l.status === "Draft").length, // Using Draft as proxy for "needs attention" for now
+    urgent: letters.filter(l => l.status === "Draft").length,
     archived: letters.filter(l => l.status === "Archived").length,
   }
 
@@ -73,11 +81,11 @@ export default function IncomingLettersPage() {
               <Inbox className="h-6 w-6 text-primary relative z-10" />
             </div>
             <h1 className="text-3xl sm:text-4xl font-bold tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-foreground to-foreground/70">
-              Incoming Letters
+              {t("incoming_letters_title")}
             </h1>
           </div>
           <p className="text-muted-foreground mt-2 max-w-2xl text-sm md:text-base">
-            Manage and track all received correspondence for the church. Streamline document flows securely and efficiently.
+            {t("incoming_letters_page_desc")}
           </p>
         </div>
         <Button
@@ -86,7 +94,7 @@ export default function IncomingLettersPage() {
           onClick={() => setDialogOpen(true)}
         >
           <Plus className="h-5 w-5" />
-          Register New Letter
+          {t("register_new_letter")}
         </Button>
       </div>
 
@@ -96,7 +104,7 @@ export default function IncomingLettersPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              Total Incoming
+              {t("total_incoming")}
             </CardTitle>
             <div className="p-2 bg-primary/10 rounded-lg group-hover:bg-primary/20 transition-colors">
               <Mail className="h-4 w-4 text-primary" />
@@ -105,7 +113,7 @@ export default function IncomingLettersPage() {
           <CardContent>
             <div className="text-3xl font-bold tracking-tight">{stats.total}</div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-              <span className="text-emerald-500 font-medium">+2</span> from last month
+              <span className="text-emerald-500 font-medium">+2</span> {t("from_last_month")}
             </p>
           </CardContent>
         </Card>
@@ -114,7 +122,7 @@ export default function IncomingLettersPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              Pending Review
+              {t("pending_review")}
             </CardTitle>
             <div className="p-2 bg-amber-500/10 rounded-lg group-hover:bg-amber-500/20 transition-colors">
               <Clock className="h-4 w-4 text-amber-500" />
@@ -123,7 +131,7 @@ export default function IncomingLettersPage() {
           <CardContent>
             <div className="text-3xl font-bold tracking-tight">{stats.pending}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Requiring immediate attention
+              {t("requiring_attention")}
             </p>
           </CardContent>
         </Card>
@@ -132,7 +140,7 @@ export default function IncomingLettersPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-red-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              Drafts / Urgent
+              {t("drafts_urgent")}
             </CardTitle>
             <div className="p-2 bg-red-500/10 rounded-lg group-hover:bg-red-500/20 transition-colors">
               <AlertCircle className="h-4 w-4 text-red-500" />
@@ -141,7 +149,7 @@ export default function IncomingLettersPage() {
           <CardContent>
             <div className="text-3xl font-bold tracking-tight">{stats.urgent}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Awaiting final approval
+              {t("awaiting_approval")}
             </p>
           </CardContent>
         </Card>
@@ -150,7 +158,7 @@ export default function IncomingLettersPage() {
           <div className="absolute inset-0 bg-gradient-to-br from-slate-500/5 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
             <CardTitle className="text-sm font-medium text-muted-foreground group-hover:text-foreground transition-colors">
-              Archived
+              {t("archived")}
             </CardTitle>
             <div className="p-2 bg-slate-500/10 rounded-lg group-hover:bg-slate-500/20 transition-colors">
               <Archive className="h-4 w-4 text-slate-500 dark:text-slate-400" />
@@ -159,7 +167,7 @@ export default function IncomingLettersPage() {
           <CardContent>
             <div className="text-3xl font-bold tracking-tight">{stats.archived}</div>
             <p className="text-xs text-muted-foreground mt-1">
-              Processed and stored
+              {t("archived_desc")}
             </p>
           </CardContent>
         </Card>
@@ -175,19 +183,57 @@ export default function IncomingLettersPage() {
               </div>
               <div>
                 <CardTitle className="text-xl font-semibold">
-                  Recent Correspondence
+                  {t("recent_correspondence")}
                 </CardTitle>
                 <p className="text-sm text-muted-foreground mt-1">
-                  A detailed list of all incoming letters to the organization.
+                  {t("detailed_list_letters")}
                 </p>
               </div>
             </div>
             <Badge variant="secondary" className="font-normal text-xs bg-primary/10 text-primary hover:bg-primary/20 px-3 py-1 border-none shadow-sm shadow-primary/5">
-              Latest Updates
+              {t("latest_updates")}
             </Badge>
           </CardHeader>
           <CardContent className="p-0 sm:p-6">
-            <LetterTable letters={letters} type="incoming" />
+            {isLoading ? (
+              <div className="flex flex-col items-center justify-center py-24 gap-4">
+                <div className="relative">
+                  <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+                  <div className="absolute inset-0 bg-primary/10 rounded-full blur-xl animate-pulse" />
+                </div>
+                <p className="text-sm font-medium text-muted-foreground animate-pulse">{t("loading_records") || "Fetching correspondence records..."}</p>
+              </div>
+            ) : error ? (
+              <div className="flex flex-col items-center justify-center py-20 px-6 text-center gap-4">
+                <div className="p-4 bg-destructive/10 rounded-full text-destructive">
+                  <AlertCircle className="h-10 w-10" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold">{t("fetch_error_title") || "Connection Error"}</h3>
+                  <p className="text-sm text-muted-foreground max-w-xs">{error}</p>
+                </div>
+                <Button variant="outline" size="sm" onClick={() => fetchLetters()} className="mt-2">
+                  Try Again
+                </Button>
+              </div>
+            ) : letters.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-24 text-center gap-4">
+                <div className="p-4 bg-muted rounded-full text-muted-foreground/40">
+                  <Mail className="h-12 w-12" />
+                </div>
+                <div className="space-y-1">
+                  <h3 className="text-lg font-semibold text-muted-foreground">{t("no_letters_title") || "No Letters Found"}</h3>
+                  <p className="text-sm text-muted-foreground max-w-xs">
+                    {t("no_letters_desc") || "There are no incoming letters registered in the system yet."}
+                  </p>
+                </div>
+                <Button size="sm" onClick={() => setDialogOpen(true)} className="mt-2">
+                  Register First Letter
+                </Button>
+              </div>
+            ) : (
+              <LetterTable letters={letters} type="incoming" />
+            )}
           </CardContent>
         </Card>
       </div>

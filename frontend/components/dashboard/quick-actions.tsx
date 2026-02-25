@@ -1,20 +1,25 @@
+"use client"
+
 import { Mail, CalendarDays, FileText, Upload } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import Link from "next/link"
-
-const actions = [
-  { label: "New Letter", href: "/letters/outgoing", icon: Mail },
-  { label: "New Meeting", href: "/meetings", icon: CalendarDays },
-  { label: "Upload Doc", href: "/documents", icon: Upload },
-  { label: "View Logs", href: "/audit", icon: FileText },
-]
+import { useTranslation } from "react-i18next"
 
 export function QuickActions() {
+  const { t } = useTranslation()
+
+  const actions = [
+    { label: t("new_letter"), href: "/letters/outgoing", icon: Mail },
+    { label: t("new_meeting"), href: "/meetings", icon: CalendarDays },
+    { label: t("upload_doc"), href: "/documents", icon: Upload },
+    { label: t("view_logs"), href: "/audit", icon: FileText },
+  ]
+
   return (
     <Card className="border border-border">
       <CardHeader className="pb-4">
         <CardTitle className="text-base font-semibold text-foreground">
-          Quick Actions
+          {t("quick_actions")}
         </CardTitle>
       </CardHeader>
       <CardContent className="grid grid-cols-2 gap-3 pt-0">

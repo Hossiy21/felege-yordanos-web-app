@@ -1,15 +1,20 @@
+"use client"
+
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowRight, Mail, CalendarDays, FileText, ShieldCheck } from "lucide-react"
-
-const features = [
-  { icon: Mail, label: "Letter Management" },
-  { icon: CalendarDays, label: "Meeting Records" },
-  { icon: FileText, label: "Document Security" },
-  { icon: ShieldCheck, label: "Approval Workflows" },
-]
+import { useTranslation } from "react-i18next"
 
 export function HeroSection() {
+  const { t } = useTranslation()
+
+  const features = [
+    { icon: Mail, label: t("letter_mgmt_feature") },
+    { icon: CalendarDays, label: t("meeting_records") },
+    { icon: FileText, label: t("document_security") },
+    { icon: ShieldCheck, label: t("approval_workflows") },
+  ]
+
   return (
     <section className="relative overflow-hidden">
       <div className="mx-auto max-w-6xl px-6 py-24 lg:py-32">
@@ -17,7 +22,7 @@ export function HeroSection() {
           {/* Badge */}
           <div className="inline-flex items-center gap-2 rounded-full bg-muted px-4 py-1.5 text-sm text-muted-foreground mb-6">
             <span className="h-2 w-2 rounded-full bg-success" />
-            Trusted by Sunday Schools across the nation
+            {t("hero_badge")}
           </div>
 
           {/* Heading */}
@@ -30,21 +35,20 @@ export function HeroSection() {
 
           {/* Sub-heading */}
           <p className="mt-6 max-w-3xl text-lg text-muted-foreground leading-relaxed text-pretty">
-            Welcome to Bole Debre Salem Medhanealem St. John the Baptist and Abune Arega-wi Cathedral
-            Felege Yordanos Sunday School. Developing spiritual growth and community service.
+            {t("hero_subtitle")}
           </p>
 
           {/* CTAs */}
           <div className="mt-10 flex flex-wrap items-center justify-center gap-4">
             <Link href="/signup">
               <Button size="lg" className="gap-2 bg-[#003366] text-white hover:bg-[#003366]/90 px-8 font-bold">
-                Join Our Sunday School
+                {t("join_sunday_school")}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </Link>
             <Link href="/about">
               <Button size="lg" variant="outline" className="px-8 border-[#003366] text-[#003366] font-bold">
-                About Us
+                {t("about_us")}
               </Button>
             </Link>
           </div>

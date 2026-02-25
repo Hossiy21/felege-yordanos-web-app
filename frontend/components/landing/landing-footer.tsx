@@ -1,27 +1,32 @@
-import Link from "next/link"
+"use client"
 
-const footerLinks = {
-  QuickLinks: [
-    { label: "Home", href: "/landing" },
-    { label: "About", href: "/about" },
-    { label: "News & Events", href: "/news" },
-    { label: "Gallery", href: "/gallery" },
-    { label: "Classes", href: "/classes" },
-    { label: "Contact", href: "/contact" },
-  ],
-  Platform: [
-    { label: "Dashboard", href: "/dashboard" },
-    { label: "Letters", href: "/letters/incoming" },
-    { label: "Meetings", href: "/meetings" },
-    { label: "Documents", href: "/documents" },
-  ],
-  Legal: [
-    { label: "Privacy Policy", href: "#" },
-    { label: "Terms of Service", href: "#" },
-  ],
-}
+import Link from "next/link"
+import { useTranslation } from "react-i18next"
 
 export function LandingFooter() {
+  const { t } = useTranslation()
+
+  const footerLinks = {
+    [t("quick_links")]: [
+      { label: t("home"), href: "/home" },
+      { label: t("about"), href: "/about" },
+      { label: t("news_events"), href: "/news" },
+      { label: t("gallery"), href: "/gallery" },
+      { label: t("classes"), href: "/classes" },
+      { label: t("contact"), href: "/contact" },
+    ],
+    [t("platform")]: [
+      { label: t("dashboard"), href: "/dashboard" },
+      { label: t("letters"), href: "/letters/incoming" },
+      { label: t("meetings"), href: "/meetings" },
+      { label: t("documents"), href: "/documents" },
+    ],
+    [t("legal")]: [
+      { label: t("privacy_policy"), href: "#" },
+      { label: t("terms_of_service"), href: "#" },
+    ],
+  }
+
   return (
     <footer className="border-t border-border bg-card">
       <div className="mx-auto max-w-6xl px-6 py-12">
@@ -61,10 +66,10 @@ export function LandingFooter() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            © 2026 Felege Yordanos Sunday School. All rights reserved.
+            {t("footer_copyright")}
           </p>
           <p className="text-xs text-muted-foreground font-amharic">
-            በቅድስት ቤተክርስቲያን መመሪያ የሚመራ ሰንበት ትምህርት ቤት
+            {t("footer_amharic")}
           </p>
         </div>
       </div>

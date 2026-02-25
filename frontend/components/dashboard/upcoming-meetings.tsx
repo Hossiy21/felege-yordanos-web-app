@@ -1,6 +1,9 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { useTranslation } from "react-i18next"
 
 const meetings = [
   {
@@ -16,17 +19,19 @@ const meetings = [
 ]
 
 export function UpcomingMeetings() {
+  const { t } = useTranslation()
+
   return (
     <Card className="border border-border">
       <CardHeader className="flex flex-row items-center justify-between pb-4">
         <CardTitle className="text-base font-semibold text-foreground">
-          Upcoming Meetings
+          {t("upcoming_meetings")}
         </CardTitle>
         <Link
           href="/meetings"
           className="text-sm font-medium text-info hover:underline"
         >
-          {"View all \u2192"}
+          {t("view_all")}
         </Link>
       </CardHeader>
       <CardContent className="flex flex-col gap-3 pt-0">
@@ -41,7 +46,7 @@ export function UpcomingMeetings() {
               </p>
               {meeting.isEmergency && (
                 <Badge className="bg-red-100 text-red-700 border-red-200 text-[10px] px-1.5 py-0" variant="outline">
-                  Emergency
+                  {t("emergency")}
                 </Badge>
               )}
             </div>

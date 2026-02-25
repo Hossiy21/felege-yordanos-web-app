@@ -6,27 +6,29 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { MapPin, Phone, Mail, Send } from "lucide-react"
-
-const contactInfo = [
-  {
-    icon: MapPin,
-    label: "Address",
-    value: "Bole, Addis Ababa, Ethiopia (Debre Salem Medhanealem)",
-  },
-  {
-    icon: Phone,
-    label: "Phone",
-    value: "+251 11 662 0000 / +251 900 000 000",
-  },
-  {
-    icon: Mail,
-    label: "Email",
-    value: "info@felegeyordanos.org",
-  },
-]
+import { useTranslation } from "react-i18next"
 
 export function ContactSection() {
+  const { t } = useTranslation()
   const [submitted, setSubmitted] = useState(false)
+
+  const contactInfo = [
+    {
+      icon: MapPin,
+      label: t("address"),
+      value: t("address_value"),
+    },
+    {
+      icon: Phone,
+      label: t("phone"),
+      value: "+251 11 662 0000 / +251 900 000 000",
+    },
+    {
+      icon: Mail,
+      label: t("email"),
+      value: "info@felegeyordanos.org",
+    },
+  ]
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -39,13 +41,13 @@ export function ContactSection() {
       <div className="mx-auto max-w-6xl px-6">
         <div className="text-center mb-16">
           <p className="text-sm font-semibold uppercase tracking-wider text-[hsl(40,90%,45%)] mb-3">
-            Contact Us
+            {t("contact_us")}
           </p>
           <h2 className="text-3xl font-bold text-foreground sm:text-4xl text-balance">
-            Get in Touch
+            {t("get_in_touch")}
           </h2>
           <p className="mt-4 max-w-2xl mx-auto text-muted-foreground leading-relaxed">
-            Have questions for Felege Yordanos Sunday School? Reach out to us.
+            {t("contact_subtitle")}
           </p>
         </div>
 
@@ -67,11 +69,11 @@ export function ContactSection() {
             </div>
 
             <div className="rounded-xl bg-muted/50 border border-border p-6">
-              <h3 className="text-base font-semibold text-foreground mb-2">Office Hours</h3>
+              <h3 className="text-base font-semibold text-foreground mb-2">{t("office_hours")}</h3>
               <div className="flex flex-col gap-1 text-sm text-muted-foreground">
-                <p>Monday - Friday: 8:00 AM - 5:00 PM</p>
-                <p>Saturday: 9:00 AM - 1:00 PM</p>
-                <p>Sunday: After church service</p>
+                <p>{t("mon_fri")}</p>
+                <p>{t("saturday")}</p>
+                <p>{t("sunday")}</p>
               </div>
             </div>
           </div>
@@ -83,38 +85,38 @@ export function ContactSection() {
                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-success/10 text-success mb-4">
                   <Send className="h-6 w-6" />
                 </div>
-                <h3 className="text-lg font-semibold text-foreground mb-1">Message Sent</h3>
+                <h3 className="text-lg font-semibold text-foreground mb-1">{t("message_sent")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  Thank you for reaching out. We will get back to you soon.
+                  {t("message_sent_desc")}
                 </p>
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="flex flex-col gap-4">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="firstName">First Name</Label>
+                    <Label htmlFor="firstName">{t("first_name")}</Label>
                     <Input id="firstName" placeholder="Abebe" required />
                   </div>
                   <div className="flex flex-col gap-2">
-                    <Label htmlFor="lastName">Last Name</Label>
+                    <Label htmlFor="lastName">{t("last_name")}</Label>
                     <Input id="lastName" placeholder="Tadesse" required />
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="contactEmail">Email</Label>
+                  <Label htmlFor="contactEmail">{t("email")}</Label>
                   <Input id="contactEmail" type="email" placeholder="you@church.org" required />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="subject">Subject</Label>
-                  <Input id="subject" placeholder="How can we help?" required />
+                  <Label htmlFor="subject">{t("subject")}</Label>
+                  <Input id="subject" placeholder={t("subject_placeholder")} required />
                 </div>
                 <div className="flex flex-col gap-2">
-                  <Label htmlFor="message">Message</Label>
-                  <Textarea id="message" placeholder="Tell us more about your needs..." rows={4} required />
+                  <Label htmlFor="message">{t("message")}</Label>
+                  <Textarea id="message" placeholder={t("message_placeholder")} rows={4} required />
                 </div>
                 <Button type="submit" className="w-full gap-2 bg-[hsl(222,47%,11%)] text-[hsl(0,0%,98%)] hover:bg-[hsl(222,47%,16%)]">
                   <Send className="h-4 w-4" />
-                  Send Message
+                  {t("send_message")}
                 </Button>
               </form>
             )}

@@ -1,42 +1,47 @@
+"use client"
+
 import { Mail, Send, Clock, CalendarDays } from "lucide-react"
 import { Card, CardContent } from "@/components/ui/card"
-
-const stats = [
-  {
-    label: "Outgoing Letters",
-    value: "42",
-    change: "+5 this week",
-    changeColor: "text-success",
-    icon: Send,
-    iconBg: "bg-blue-50 text-info",
-  },
-  {
-    label: "Incoming Letters",
-    value: "38",
-    change: "+3 this week",
-    changeColor: "text-success",
-    icon: Mail,
-    iconBg: "bg-emerald-50 text-success",
-  },
-  {
-    label: "Pending Approval",
-    value: "7",
-    change: "2 urgent",
-    changeColor: "text-warning",
-    icon: Clock,
-    iconBg: "bg-amber-50 text-warning",
-  },
-  {
-    label: "Meetings This Month",
-    value: "6",
-    change: "Next: Wed Feb 11",
-    changeColor: "text-muted-foreground",
-    icon: CalendarDays,
-    iconBg: "bg-slate-100 text-muted-foreground",
-  },
-]
+import { useTranslation } from "react-i18next"
 
 export function DashboardStats() {
+  const { t } = useTranslation()
+
+  const stats = [
+    {
+      label: t("outgoing_letters"),
+      value: "42",
+      change: `+5 ${t("this_week")}`,
+      changeColor: "text-success",
+      icon: Send,
+      iconBg: "bg-blue-50 text-info",
+    },
+    {
+      label: t("incoming_letters"),
+      value: "38",
+      change: `+3 ${t("this_week")}`,
+      changeColor: "text-success",
+      icon: Mail,
+      iconBg: "bg-emerald-50 text-success",
+    },
+    {
+      label: t("pending_approval"),
+      value: "7",
+      change: `2 ${t("urgent")}`,
+      changeColor: "text-warning",
+      icon: Clock,
+      iconBg: "bg-amber-50 text-warning",
+    },
+    {
+      label: t("meetings_this_month"),
+      value: "6",
+      change: `${t("next")}: Wed Feb 11`,
+      changeColor: "text-muted-foreground",
+      icon: CalendarDays,
+      iconBg: "bg-slate-100 text-muted-foreground",
+    },
+  ]
+
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
       {stats.map((stat) => (

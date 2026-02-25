@@ -4,12 +4,19 @@ import (
 	"church-platform/letter-service/internal/database"
 	"church-platform/letter-service/internal/handlers"
 
+	"os"
+
 	"github.com/gin-gonic/gin"
 )
 
 func main() {
+	if _, err := os.Stat("./uploads"); os.IsNotExist(err) {
+		os.Mkdir("./uploads", 0755)
+	}
+
 	database.InitMongo()
 	r := gin.Default()
+	r.Static("/uploads", "./uploads")
 	r.POST("/letters", handlers.CreateLetterHandler)
 	r.GET("/letters", handlers.GetLettersHander)
 	r.GET("/letters/trash", handlers.GetTrashLetterHandler)

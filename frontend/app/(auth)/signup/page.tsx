@@ -86,7 +86,7 @@ export default function SignUpPage() {
       <div className="w-full max-w-md">
         {/* Back to Landing */}
         <Link
-          href="/landing"
+          href="/home"
           className="inline-flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors mb-8"
         >
           <ArrowLeft className="h-4 w-4" />

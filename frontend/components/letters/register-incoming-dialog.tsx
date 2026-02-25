@@ -1,6 +1,7 @@
 "use client"
 
 import { useState, useCallback, useMemo, useRef, useEffect } from "react"
+import { toast } from "sonner"
 import { EthiopianDatePicker } from "@/components/ui/ethiopian-date-picker"
 import {
     Dialog,
@@ -384,6 +385,7 @@ export function RegisterIncomingDialog({
     // Form state
     const [subject, setSubject] = useState("")
     const [from, setFrom] = useState("")
+    const [reference, setReference] = useState("")
     const [senderRef, setSenderRef] = useState("")
     const [department, setDepartment] = useState("")
     const [urgency, setUrgency] = useState("normal")
@@ -412,6 +414,7 @@ export function RegisterIncomingDialog({
     const resetForm = useCallback(() => {
         setSubject("")
         setFrom("")
+        setReference("")
         setSenderRef("")
         setDepartment("")
         setUrgency("normal")
@@ -424,27 +427,62 @@ export function RegisterIncomingDialog({
     }, [])
 
     const handleSave = useCallback(
-        (status: "Draft" | "Approved") => {
+        async (status: "Draft" | "Approved") => {
             setSaving(true)
-            setTimeout(() => {
+            try {
+                // Determine department ID based on selection (mocking 1 for now if not found)
+                const deptId = DEPARTMENTS.indexOf(department) + 1 || 1
+                const referenceNo = reference || `FY/IN/${new Date().getFullYear()}/${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
+
+                const formData = new FormData()
+                formData.append("reference_number", referenceNo)
+                formData.append("letter_type", "incoming")
+                formData.append("subject", subject || "Untitled Letter")
+                formData.append("department_id", deptId.toString())
+                formData.append("department_name", department || "General")
+                formData.append("status", status.toLowerCase())
+                if (pdfFile) {
+                    formData.append("pdf", pdfFile)
+                }
+
+                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters`, {
+                    method: "POST",
+                    body: formData,
+                    credentials: "include",
+                })
+
+                if (!response.ok) {
+                    throw new Error("Failed to save letter")
+                }
+
+                const result = await response.json()
+                toast.success("Correspondence Saved Successfully")
+
+                // Call onSubmit with the expected frontend format
                 onSubmit?.({
-                    reference: "—",
+                    reference: referenceNo,
                     subject: subject || "Untitled Letter",
                     department: department || "General",
-                    status,
+                    status: status,
                     date: shortDate,
-                    assigned: "Unassigned",
+                    assigned: "You",
+                    pdfUrl: result.pdf_url,
                 })
+
                 resetForm()
                 onOpenChange(false)
+            } catch (err) {
+                console.error("Save failed:", err)
+                toast.error("Failed to save correspondence")
+            } finally {
                 setSaving(false)
-            }, 700)
+            }
         },
-        [subject, department, shortDate, onSubmit, resetForm, onOpenChange]
+        [subject, department, reference, pdfFile, shortDate, onSubmit, resetForm, onOpenChange]
     )
 
     const formData = {
-        subject, from, senderRef, department, urgency, letterDate, receivedDate, remarks
+        subject, from, reference, senderRef, department, urgency, letterDate, receivedDate, remarks
     }
 
     const dialogSizeClass = isFullscreen
@@ -535,9 +573,21 @@ export function RegisterIncomingDialog({
 
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
+                                                <Label className="text-sm font-medium text-foreground">Internal Reference No.</Label>
+                                                <Input
+                                                    value={reference}
+                                                    onChange={e => setReference(e.target.value)}
+                                                    placeholder="e.g. FY/IN/2026/001"
+                                                    className="font-mono bg-background"
+                                                />
+                                            </div>
+                                            <div className="space-y-2">
                                                 <Label className="text-sm font-medium">Sender (From) <span className="text-destructive">*</span></Label>
                                                 <Input value={from} onChange={e => setFrom(e.target.value)} placeholder="Organization or Individual Name" className="bg-background" />
                                             </div>
+                                        </div>
+
+                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                                             <div className="space-y-2">
                                                 <Label className="text-sm font-medium">Sender's Reference <span className="text-muted-foreground font-normal text-xs">(If any)</span></Label>
                                                 <Input value={senderRef} onChange={e => setSenderRef(e.target.value)} placeholder="e.g., ORG/2023/001" className="bg-background" />

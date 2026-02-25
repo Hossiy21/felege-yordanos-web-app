@@ -16,6 +16,7 @@ interface AuthContextType {
   user: User | null
   isLoading: boolean
   signIn: (email: string, password: string, remember?: boolean) => Promise<{ success: boolean; error?: string }>
+  signUp: (fullName: string, email: string, password: string) => Promise<{ success: boolean; error?: string }>
   signOut: () => void
 }
 
@@ -121,6 +122,52 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     []
   )
 
+  const signUp = useCallback(
+    async (fullName: string, email: string, password: string) => {
+      setIsLoading(true)
+      try {
+        const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fullName, email, password }),
+          credentials: "include",
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          return {
+            success: false,
+            error: data.error || "Sign up failed",
+          }
+        }
+
+        const backendUser = data.user
+        const userData: User = {
+          id: backendUser.id || email,
+          fullName: backendUser.name || fullName,
+          email: backendUser.email || email,
+          role: backendUser.role || "staff",
+          department: "",
+        }
+
+        setUser(userData)
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(userData))
+
+        return { success: true }
+      } catch (err) {
+        console.error("Sign up error:", err)
+        return {
+          success: false,
+          error: "Unable to connect to the server. Please try again.",
+        }
+      } finally {
+        setIsLoading(false)
+      }
+    },
+    []
+  )
+
   const signOut = useCallback(async () => {
     try {
       // Tell backend to clear the HttpOnly cookie
@@ -135,11 +182,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null)
     localStorage.removeItem(STORAGE_KEY)
     sessionStorage.removeItem(STORAGE_KEY)
-    window.location.href = "/landing"
+    window.location.href = "/home"
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, signIn, signOut }}>
+    <AuthContext.Provider value={{ user, isLoading, signIn, signUp, signOut }}>
       {children}
     </AuthContext.Provider>
   )

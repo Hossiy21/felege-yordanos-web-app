@@ -8,6 +8,10 @@ import (
 	"church-platform/letter-service/internal/database"
 	"church-platform/letter-service/internal/models"
 
+	"log"
+	"strconv"
+	"strings"
+
 	"github.com/gin-gonic/gin"
 	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/bson/primitive"
@@ -28,47 +32,84 @@ type Letter struct {
 }
 
 func CreateLetterHandler(c *gin.Context) {
-	// userEmail, _ := c.Get("user_email")
 	emailValue, exists := c.Get("user_email")
-
 	var userEmail string
 	if !exists || emailValue == nil {
-		// This is what we use when testing with Thunder Client
 		userEmail = "test_user@church.com"
 	} else {
-		// Only convert to string if we know it exists
 		userEmail = emailValue.(string)
 	}
-	var input struct {
-		ReferenceNumber string `json:"reference_number"`
-		LetterType      string `json:"letter_type"`
-		Subject         string `json:"subject"`
-		DepartmentId    int    `json:"department_id"`
-		DepartmentName  string `json:"department_name"`
+
+	var referenceNo, letterType, subject, deptName, pdfUrl string
+	var deptId int
+
+	contentType := c.GetHeader("Content-Type")
+	log.Printf("Received CreateLetter request. Content-Type: %s", contentType)
+
+	if strings.Contains(contentType, "multipart/form-data") {
+		referenceNo = c.PostForm("reference_number")
+		letterType = c.PostForm("letter_type")
+		subject = c.PostForm("subject")
+		deptName = c.PostForm("department_name")
+		deptId, _ = strconv.Atoi(c.PostForm("department_id"))
+
+		log.Printf("Parsing MultipartForm: Ref=%s, Subj=%s, Dept=%s", referenceNo, subject, deptName)
+
+		file, err := c.FormFile("pdf")
+		if err == nil {
+			filename := primitive.NewObjectID().Hex() + ".pdf"
+			savePath := "./uploads/" + filename
+			log.Printf("Saving PDF to: %s", savePath)
+			if err := c.SaveUploadedFile(file, savePath); err != nil {
+				log.Printf("Error saving file: %v", err)
+				c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to save file"})
+				return
+			}
+			pdfUrl = "/api/letter/uploads/" + filename
+		} else {
+			log.Printf("No PDF file provided in multipart request (optional).")
+		}
+	} else {
+		log.Printf("Attempting JSON binding...")
+		var input struct {
+			ReferenceNumber string `json:"reference_number"`
+			LetterType      string `json:"letter_type"`
+			Subject         string `json:"subject"`
+			DepartmentId    int    `json:"department_id"`
+			DepartmentName  string `json:"department_name"`
+		}
+		if err := c.ShouldBindJSON(&input); err != nil {
+			log.Printf("JSON bind error: %v", err)
+			c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Format"})
+			return
+		}
+		referenceNo = input.ReferenceNumber
+		letterType = input.LetterType
+		subject = input.Subject
+		deptName = input.DepartmentName
+		deptId = input.DepartmentId
 	}
 
-	if err := c.ShouldBindJSON(&input); err != nil {
-		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid Json Format"})
-		return
-	}
-	newLetter := Letter{
+	newLetter := models.Letter{
 		ID:              primitive.NewObjectID(),
-		ReferenceNumber: input.ReferenceNumber,
-		Subject:         input.Subject,
+		ReferenceNumber: referenceNo,
+		Subject:         subject,
+		LetterType:      letterType,
 		Status:          "pending",
-		DepartmentID:    input.DepartmentId,
-		DepartmentName:  input.DepartmentName,
+		DepartmentID:    deptId,
+		DepartmentName:  deptName,
 		OwnerEmail:      userEmail,
+		PdfUrl:          pdfUrl,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
 		DeletedAt:       nil,
 	}
 	_, err := database.LetterCollection.InsertOne(context.TODO(), newLetter)
 	if err != nil {
-		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error: " + err.Error()})
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
 		return
 	}
-	c.JSON(http.StatusCreated, gin.H{"message": "Letter Saved to MongoDB"})
+	c.JSON(http.StatusCreated, gin.H{"message": "Letter Saved", "pdf_url": pdfUrl})
 }
 
 func GetLettersHander(c *gin.Context) {

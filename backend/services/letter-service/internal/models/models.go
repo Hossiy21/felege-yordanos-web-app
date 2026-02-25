@@ -35,6 +35,7 @@ type Letter struct {
 	DepartmentID    int                `json:"department_id" bson:"department_id"`
 	DepartmentName  string             `json:"department_name" bson:"department_name"`
 	OwnerEmail      string             `json:"owner_email" bson:"owner_email"`
+	PdfUrl          string             `json:"pdf_url" bson:"pdf_url"`
 	CreatedAt       time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt       time.Time          `json:"updated_at" bson:"updated_at"`
 	DeletedAt       *time.Time         `json:"deleted_at,omitempty" bson:"deleted_at,omitempty"`

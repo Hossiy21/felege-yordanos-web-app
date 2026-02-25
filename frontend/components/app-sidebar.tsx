@@ -2,6 +2,7 @@
 
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import { useTranslation } from "react-i18next"
 import {
   LayoutDashboard,
   Mail,
@@ -13,45 +14,48 @@ import {
   Settings,
   ChevronLeft,
   Newspaper,
+  Image as ImageIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
 import { useState } from "react"
 
-const navSections = [
-  {
-    label: "OVERVIEW",
-    items: [
-      { name: "Dashboard", href: "/dashboard", icon: LayoutDashboard },
-    ],
-  },
-  {
-    label: "LETTER MANAGEMENT",
-    items: [
-      { name: "Incoming ", href: "/letters/incoming", icon: Mail },
-      { name: "Outgoing", href: "/letters/outgoing", icon: Send },
-    ],
-  },
-  {
-    label: "OPERATIONS",
-    items: [
-      { name: "Meetings", href: "/meetings", icon: CalendarDays },
-      { name: "Documents", href: "/documents", icon: FileText },
-      { name: "News Management", href: "/news-management", icon: Newspaper },
-    ],
-  },
-  {
-    label: "ADMINISTRATION",
-    items: [
-      { name: "Audit Logs", href: "/audit", icon: ClipboardList },
-      { name: "User Management", href: "/users", icon: Users },
-      { name: "Settings", href: "/settings", icon: Settings },
-    ],
-  },
-]
-
 export function AppSidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
+  const { t } = useTranslation()
+
+  const navSections = [
+    {
+      label: t("overview"),
+      items: [
+        { name: t("dashboard"), href: "/dashboard", icon: LayoutDashboard },
+      ],
+    },
+    {
+      label: t("letter_management"),
+      items: [
+        { name: t("incoming"), href: "/letters/incoming", icon: Mail },
+        { name: t("outgoing"), href: "/letters/outgoing", icon: Send },
+      ],
+    },
+    {
+      label: t("operations"),
+      items: [
+        { name: t("meetings"), href: "/meetings", icon: CalendarDays },
+        { name: t("documents"), href: "/documents", icon: FileText },
+        { name: t("news_management"), href: "/news-management", icon: Newspaper },
+        { name: t("gallery_management"), href: "/gallery-management", icon: ImageIcon },
+      ],
+    },
+    {
+      label: t("administration"),
+      items: [
+        { name: t("audit_logs"), href: "/audit", icon: ClipboardList },
+        { name: t("user_management"), href: "/users", icon: Users },
+        { name: t("settings"), href: "/settings", icon: Settings },
+      ],
+    },
+  ]
 
   return (
     <aside
@@ -71,7 +75,7 @@ export function AppSidebar() {
               Felege Yordanos
             </span>
             <span className="text-xs text-sidebar-muted truncate">
-              Sunday School
+              {t("sunday_school")}
             </span>
           </div>
         )}

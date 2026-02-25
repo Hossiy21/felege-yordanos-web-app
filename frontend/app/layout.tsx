@@ -3,6 +3,7 @@ import { Inter } from 'next/font/google'
 import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/lib/auth-context'
 
+import '@/lib/i18n' // Import the i18n configuration to initialize it immediately
 import './globals.css'
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' })
@@ -11,6 +12,8 @@ export const metadata: Metadata = {
   title: 'SST Manager - Sunday School Digital Management',
   description: 'Sunday School Digital Management System for letter management, meeting minutes, document security, and approval workflows.',
 }
+
+import { Toaster } from 'sonner'
 
 export default function RootLayout({
   children,
@@ -28,6 +31,7 @@ export default function RootLayout({
         >
           <AuthProvider>
             {children}
+            <Toaster richColors position="top-right" />
           </AuthProvider>
         </ThemeProvider>
       </body>

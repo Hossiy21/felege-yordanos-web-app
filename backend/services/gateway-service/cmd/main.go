@@ -6,11 +6,12 @@ import (
 	"net/http/httputil"
 	"net/url"
 	"os"
-	"strings"
 
+	// "strings"
+
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
-	"github.com/gin-contrib/cors"
 )
 
 func init() {
@@ -55,6 +56,8 @@ func main() {
 				targetUrl = os.Getenv("LETTER_SERVICE_URL")
 			case "news":
 				targetUrl = os.Getenv("NEWS_SERVICE_URL")
+			case "meeting":
+				targetUrl = os.Getenv("MEETING_SERVICE_URL")
 			default:
 				c.JSON(http.StatusNotFound, gin.H{"error": "Service route not defined"})
 			}
@@ -72,17 +75,9 @@ func main() {
 			c.Request.URL.Host = remote.Host
 			c.Request.URL.Scheme = remote.Scheme
 
-			//clean the path
+			c.Request.URL.Path = path
 
-			cleanedPath := path
-
-			prefixes := []string{"/api", "/auth", "/letter", "/news"}
-			for _, p := range prefixes {
-				cleanedPath = strings.TrimPrefix(cleanedPath, p)
-			}
-			c.Request.URL.Path = cleanedPath
-
-			log.Printf("Proxying request : %s -> %s%s", path, targetUrl, cleanedPath)
+			log.Printf("Proxying request : %s -> %s%s", path, targetUrl, path)
 			proxy.ServeHTTP(c.Writer, c.Request)
 
 		})

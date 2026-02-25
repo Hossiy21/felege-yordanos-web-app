@@ -29,8 +29,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { useTranslation } from "react-i18next"
+import i18nInstance from "@/lib/i18n"
 
 export default function SettingsPage() {
+  const { t } = useTranslation()
   const [isLoading, setIsLoading] = useState(false)
 
   const handleSave = () => {
@@ -41,21 +44,27 @@ export default function SettingsPage() {
     }, 1000)
   }
 
+  const changeLanguage = (lng: string) => {
+    if (i18nInstance && typeof i18nInstance.changeLanguage === 'function') {
+      i18nInstance.changeLanguage(lng)
+    }
+  }
+
   return (
     <div className="flex flex-col gap-6">
       <div>
-        <h1 className="text-2xl font-bold text-foreground text-balance">Settings</h1>
+        <h1 className="text-2xl font-bold text-foreground text-balance">{t("settings_title")}</h1>
         <p className="text-muted-foreground text-sm mt-1">
-          Manage your account settings and set e-mail preferences.
+          {t("settings_desc")}
         </p>
       </div>
 
       <Tabs defaultValue="general" className="w-full">
         <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
-          <TabsTrigger value="general">General</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Security</TabsTrigger>
-          <TabsTrigger value="appearance">Appearance</TabsTrigger>
+          <TabsTrigger value="general">{t("general")}</TabsTrigger>
+          <TabsTrigger value="notifications">{t("notifications_tab")}</TabsTrigger>
+          <TabsTrigger value="security">{t("security")}</TabsTrigger>
+          <TabsTrigger value="appearance">{t("appearance_tab")}</TabsTrigger>
         </TabsList>
 
         {/* General Settings */}
@@ -64,29 +73,29 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Building2 className="h-5 w-5 text-primary" />
-                <CardTitle>Organization Details</CardTitle>
+                <CardTitle>{t("org_details")}</CardTitle>
               </div>
               <CardDescription>
-                Manage your organization's public information.
+                {t("org_details_desc")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="grid gap-2">
-                <Label htmlFor="orgName">Organization Name</Label>
+                <Label htmlFor="orgName">{t("org_name")}</Label>
                 <Input id="orgName" defaultValue="Felege Yordanos Church" />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="email">Official Email</Label>
+                <Label htmlFor="email">{t("official_email")}</Label>
                 <Input id="email" defaultValue="contact@felegeyordanos.org" />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="address">Address</Label>
+                <Label htmlFor="address">{t("address")}</Label>
                 <Textarea id="address" defaultValue="Addis Ababa, Ethiopia" />
               </div>
             </CardContent>
             <CardFooter className="border-t px-6 py-4 bg-muted/40 flex justify-end">
               <Button onClick={handleSave} disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save Changes"}
+                {isLoading ? t("saving") : t("save_changes")}
               </Button>
             </CardFooter>
           </Card>
@@ -98,7 +107,7 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Bell className="h-5 w-5 text-primary" />
-                <CardTitle>Notifications</CardTitle>
+                <CardTitle>{t("notifications_tab")}</CardTitle>
               </div>
               <CardDescription>
                 Configure how you receive notifications.
@@ -135,7 +144,7 @@ export default function SettingsPage() {
             </CardContent>
             <CardFooter className="border-t px-6 py-4 bg-muted/40 flex justify-end">
               <Button onClick={handleSave} disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save Preferences"}
+                {isLoading ? t("saving") : t("save_changes")}
               </Button>
             </CardFooter>
           </Card>
@@ -147,7 +156,7 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
-                <CardTitle>Security</CardTitle>
+                <CardTitle>{t("security")}</CardTitle>
               </div>
               <CardDescription>
                 Manage your password and security settings.
@@ -181,7 +190,7 @@ export default function SettingsPage() {
             </CardContent>
             <CardFooter className="border-t px-6 py-4 bg-muted/40 flex justify-end">
               <Button onClick={handleSave} disabled={isLoading}>
-                {isLoading ? "Updating..." : "Update Password"}
+                {isLoading ? t("saving") : t("save_changes")}
               </Button>
             </CardFooter>
           </Card>
@@ -193,7 +202,7 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Palette className="h-5 w-5 text-primary" />
-                <CardTitle>Appearance</CardTitle>
+                <CardTitle>{t("appearance_tab")}</CardTitle>
               </div>
               <CardDescription>
                 Customize the look and feel of the application.
@@ -221,14 +230,15 @@ export default function SettingsPage() {
               </div>
               <Separator />
               <div className="space-y-2">
-                <Label>Language</Label>
-                <Select defaultValue="en">
+                <Label>{t("language")}</Label>
+                <Select value={i18nInstance.language} onValueChange={changeLanguage}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Select language" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="en">English</SelectItem>
-                    <SelectItem value="am">Amharic</SelectItem>
+                    <SelectItem value="am">Amharic (አማርኛ)</SelectItem>
+                    <SelectItem value="gez">Ge'ez (ግዕዝ)</SelectItem>
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-muted-foreground">
@@ -238,7 +248,7 @@ export default function SettingsPage() {
             </CardContent>
             <CardFooter className="border-t px-6 py-4 bg-muted/40 flex justify-end">
               <Button onClick={handleSave} disabled={isLoading}>
-                {isLoading ? "Saving..." : "Save Preferences"}
+                {isLoading ? t("saving") : t("save_changes")}
               </Button>
             </CardFooter>
           </Card>
