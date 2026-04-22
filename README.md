@@ -163,99 +163,28 @@ This will automatically launch:
 ## 📁 Project Structure
 
 ```
-church-management-system/
-├── README.md
+felege-yordanos/
+├── README.md              # Project documentation & roadmap
+├── .gitignore             # Safety rules for environment variables
 ├── backend/
-│   ├── docker-compose.yml
-│   ├── go.mod
-│   ├── internal/
-│   │   ├── handlers/
-│   │   │   ├── handlers.go
-│   │   │   ├── stats.go
-│   │   │   └── user.go
-│   │   ├── middleware/
-│   │   │   ├── constants.go
-│   │   │   └── limiter.go
-│   │   └── services/
-│   └── services/
-│       ├── auth-service/
-│       │   ├── cmd/
-│       │   ├── internal/
-│       │   ├── Dockerfile
-│       │   └── go.mod
-│       ├── gateway-service/
-│       │   ├── cmd/
-│       │   ├── middleware/
-│       │   ├── proxy/
-│       │   ├── Dockerfile
-│       │   └── go.mod
-│       ├── letter-service/
-│       │   ├── cmd/
-│       │   ├── internal/
-│       │   ├── tmp/
-│       │   ├── Dockerfile
-│       │   └── go.mod
-│       ├── meeting-service/
-│       │   ├── cmd/
-│       │   ├── internal/
-│       │   └── go.mod
-│       └── news-service/
-│           ├── cmd/
-│           ├── internal/
-│           ├── Dockerfile
-│           └── go.mod
+│   ├── docker-compose.yml # Infrastructure orchestration
+│   ├── go.mod             # Root dependencies
+│   ├── services/          # Microservices architecture
+│   │   ├── AutoRun.bat    # Automation script for Windows
+│   │   ├── auth-service/     # Identity & Session management
+│   │   ├── gateway-service/  # Routing & JWT Validation
+│   │   ├── document-service/ # Church archives & S3 Metadata
+│   │   ├── letter-service/   # Correspondence & PDF Logic
+│   │   ├── meeting-service/  # Minutes & Schedule
+│   │   └── news-service/     # Public content management
+│   └── internal/          # Legacy handlers
 ├── frontend/
-│   ├── app/
-│   │   ├── (auth)/
-│   │   │   ├── signin/
-│   │   │   └── signup/
-│   │   ├── (dashboard)/
-│   │   │   ├── audit/
-│   │   │   ├── dashboard/
-│   │   │   ├── documents/
-│   │   │   ├── gallery-management/
-│   │   │   ├── letters/
-│   │   │   ├── meetings/
-│   │   │   ├── news-management/
-│   │   │   ├── security/
-│   │   │   ├── settings/
-│   │   │   └── users/
-│   │   ├── about/
-│   │   ├── classes/
-│   │   ├── contact/
-│   │   ├── gallery/
-│   │   ├── home/
-│   │   ├── news/
-│   │   ├── globals.css
-│   │   ├── layout.tsx
-│   │   └── page.tsx
-│   ├── components/
-│   │   ├── ui/
-│   │   ├── audit/
-│   │   ├── dashboard/
-│   │   ├── documents/
-│   │   ├── landing/
-│   │   ├── letters/
-│   │   ├── meetings/
-│   │   ├── users/
-│   │   ├── app-sidebar.tsx
-│   │   ├── language-toggle.tsx
-│   │   ├── theme-provider.tsx
-│   │   ├── theme-toggle.tsx
-│   │   └── top-nav.tsx
-│   ├── hooks/
-│   ├── lib/
-│   ├── public/
-│   ├── scripts/
-│   ├── styles/
-│   ├── components.json
-│   ├── next.config.mjs
-│   ├── package.json
-│   ├── pnpm-lock.yaml
-│   ├── postcss.config.mjs
-│   ├── tailwind.config.ts
-│   └── tsconfig.json
-└── tmp/
+│   ├── app/               # Next.js App Router
+│   │   ├── (dashboard)/   # Management routes (Documents, Letters, etc.)
+│   │   └── home/          # Public landing pages
+│   ├── components/        # Reusable UI elements
+│   └── lib/               # Shared logic & Auth context
+└── tmp/                   # Development logs & scripts
 ```
 
 ## 🚦 Getting Started
