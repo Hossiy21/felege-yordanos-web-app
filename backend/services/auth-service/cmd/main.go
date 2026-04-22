@@ -34,11 +34,14 @@ func main() {
 	admin.Use(middleware.AuthGuard())
 	{
 		admin.POST("/create-user", handlers.AdminCreateUser)
+		admin.GET("/users", handlers.SearchUsers)
+		admin.PATCH("/update-user", handlers.UpdateUser)
 	}
 
-	r.POST("/login", handlers.Login)
+	r.POST("/login", middleware.LoginLimiter(), handlers.Login)
 	r.POST("/logout", handlers.Logout)
 	r.GET("/me", middleware.AuthGuard(), handlers.GetMe)
+	r.POST("/refresh", handlers.Refresh)
 
 	port := os.Getenv("PORT")
 	if port == "" {

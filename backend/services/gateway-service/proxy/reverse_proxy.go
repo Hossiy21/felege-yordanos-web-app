@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httputil"
 	"net/url"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -21,7 +22,12 @@ func NewProxy(target string) gin.HandlerFunc {
 			req.Host = remote.Host
 			req.URL.Scheme = remote.Scheme
 			req.URL.Host = remote.Host
-			req.URL.Path = c.Param("proxyPath")
+			path := c.Param("proxyPath")
+			if !strings.HasPrefix(path, "/") {
+				path = "/" + path
+			}
+			req.URL.Path = remote.Path + path
+			req.URL.RawQuery = c.Request.URL.RawQuery
 		}
 		proxy.ServeHTTP(c.Writer, c.Request)
 	}

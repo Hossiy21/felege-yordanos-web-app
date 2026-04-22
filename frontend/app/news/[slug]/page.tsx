@@ -2,169 +2,228 @@
 
 import { LandingNav } from "@/components/landing/landing-nav"
 import { LandingFooter } from "@/components/landing/landing-footer"
-import { useParams } from "next/navigation"
-import { getNewsBySlug } from "@/lib/news-store"
-import { notFound } from "next/navigation"
+import { useParams, notFound } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ArrowLeft, Calendar } from "lucide-react"
-import { useState } from "react"
-import type { NewsArticle } from "@/lib/news-store"
+import {
+    ArrowLeft,
+    Calendar,
+    Clock,
+    Share2,
+    CalendarDays,
+    Timer,
+    ChevronRight,
+    ArrowRight,
+    Sparkles
+} from "lucide-react"
+import { useEffect, useState, useMemo } from "react"
+import { getNewsById, getRecentNews, type NewsArticle } from "@/lib/news-store"
+import { Badge } from "@/components/ui/badge"
+import { Separator } from "@/components/ui/separator"
+import { useTranslation } from "react-i18next"
+import { cn } from "@/lib/utils"
+import { NewsCard } from "@/components/news/news-card"
+
+// Helper to estimate reading time
+const calculateReadingTime = (content: string) => {
+    const wordsPerMinute = 200;
+    const words = content?.trim().split(/\s+/).length || 0;
+    return Math.max(1, Math.ceil(words / wordsPerMinute));
+};
 
 export default function NewsDetailPage() {
+    const { t } = useTranslation()
     const params = useParams()
-    const slug = params.slug as string
-    const [article] = useState<NewsArticle | null>(() => {
-        try {
-            return getNewsBySlug(slug) ?? null
-        } catch {
-            return null
+    const id = params.slug as string
+    const [article, setArticle] = useState<NewsArticle | null>(null)
+    const [relatedNews, setRelatedNews] = useState<NewsArticle[]>([])
+    const [isLoading, setIsLoading] = useState(true)
+
+    useEffect(() => {
+        const fetchArticle = async () => {
+            try {
+                const data = await getNewsById(id)
+                setArticle(data)
+
+                // Fetch related news (excluding current)
+                const recent = await getRecentNews(6)
+                if (data) {
+                    setRelatedNews(recent.filter(n => n.id !== data.id).slice(0, 3))
+                }
+            } catch (err) {
+                console.error("Article fetch failed", err)
+            } finally {
+                setIsLoading(false)
+            }
         }
-    })
+        fetchArticle()
+    }, [id])
+
+    const readingTime = useMemo(() => {
+        if (!article) return 0;
+        return calculateReadingTime(article.content);
+    }, [article]);
+
+    if (isLoading) {
+        return (
+            <div className="min-h-screen bg-white dark:bg-[#020617] flex flex-col">
+                <LandingNav />
+                <div className="flex-1 flex items-center justify-center">
+                    <div className="flex flex-col items-center gap-4">
+                        <div className="w-12 h-12 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                        <p className="text-slate-400 font-bold uppercase tracking-widest text-[10px]">
+                            {t('unfolding_story')}
+                        </p>
+                    </div>
+                </div>
+            </div>
+        )
+    }
 
     if (!article) {
         notFound()
     }
 
     return (
-        <div className="min-h-screen bg-background">
+        <div className="min-h-screen bg-white dark:bg-[#020617] transition-colors duration-500">
             <LandingNav />
+
             <main>
-                {/* Hero Banner */}
-                <div className="bg-[#003366] py-16 text-white border-b border-white/10">
+                {/* Clean Detail Header */}
+                <div className="pt-32 pb-16 bg-slate-50 dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
                     <div className="mx-auto max-w-4xl px-6">
-                        <Link href="/news">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-white/70 hover:text-white hover:bg-white/10 mb-6 gap-2 -ml-2"
-                            >
-                                <ArrowLeft className="h-4 w-4" />
-                                Back to News
-                            </Button>
+                        <Link
+                            href="/news"
+                            className="inline-flex items-center gap-2 text-slate-400 hover:text-blue-600 transition-colors mb-10 group"
+                        >
+                            <ArrowLeft className="h-4 w-4 transition-transform group-hover:-translate-x-1" />
+                            <span className="text-xs font-bold uppercase tracking-widest">{t('back_to_library')}</span>
                         </Link>
-                        <div className="flex items-center gap-3 mb-4">
-                            <span className="px-3 py-1 rounded-full bg-[#FFB800] text-[#003366] text-xs font-bold">
-                                {article.category}
-                            </span>
-                            <span className="flex items-center gap-1.5 text-sm text-white/60">
-                                <Calendar className="h-3.5 w-3.5" />
-                                {article.date}
-                            </span>
-                        </div>
-                        <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold leading-tight">
+
+                        <Badge className="bg-blue-600 text-white border-none px-4 py-1.5 rounded-lg font-bold uppercase tracking-widest text-[10px] mb-6">
+                            {article.category || "Insight"}
+                        </Badge>
+
+                        <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight mb-8">
                             {article.title}
                         </h1>
-                        <p className="mt-4 text-lg text-white/70 max-w-2xl">
-                            {article.description}
-                        </p>
+
+                        <div className="flex flex-wrap items-center gap-6 text-slate-500 dark:text-slate-400">
+                            <div className="flex items-center gap-2">
+                                <CalendarDays className="h-4 w-4 text-blue-500" />
+                                <span className="text-sm font-medium">
+                                    {new Date(article.created_at).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}
+                                </span>
+                            </div>
+                            <Separator orientation="vertical" className="h-4 bg-slate-200 dark:bg-slate-700 hidden sm:block" />
+                            <div className="flex items-center gap-2">
+                                <Timer className="h-4 w-4 text-blue-500" />
+                                <span className="text-sm font-medium">{readingTime} {t('min_read')}</span>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 {/* Article Content */}
-                <article className="py-16">
-                    <div className="mx-auto max-w-4xl px-6">
-                        <div className="prose prose-lg dark:prose-invert max-w-none">
+                <div className="mx-auto max-w-4xl px-6 py-20">
+                    <div className="space-y-12">
+                        {/* Summary Block */}
+                        <div className="text-2xl md:text-3xl text-slate-600 dark:text-slate-300 font-medium leading-relaxed italic border-l-4 border-blue-600 pl-8">
+                            {article.summary}
+                        </div>
+
+                        {/* Main Image */}
+                        {article.image_url && (
+                            <div className="rounded-2xl overflow-hidden shadow-2xl border border-slate-100 dark:border-slate-800">
+                                <img
+                                    src={article.image_url}
+                                    alt={article.title}
+                                    className="w-full h-auto object-cover max-h-[600px]"
+                                />
+                            </div>
+                        )}
+
+                        {/* Prose Body */}
+                        <article className="prose prose-lg md:prose-xl dark:prose-invert max-w-none 
+                            prose-headings:font-extrabold prose-headings:tracking-tight prose-headings:text-slate-900 dark:prose-headings:text-white
+                            prose-p:text-slate-600 dark:prose-p:text-slate-300 prose-p:leading-relaxed
+                            prose-strong:text-blue-600 dark:prose-strong:text-blue-400
+                            prose-blockquote:border-blue-600/30 prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-900/50 prose-blockquote:rounded-xl prose-blockquote:py-2
+                        ">
                             {article.content.split("\n\n").map((paragraph, idx) => {
-                                // Handle bold headers like **Text:**
                                 if (paragraph.startsWith("**") && paragraph.endsWith("**")) {
-                                    const text = paragraph.replace(/\*\*/g, "")
-                                    return (
-                                        <h2
-                                            key={idx}
-                                            className="text-2xl font-bold text-foreground mt-10 mb-4"
-                                        >
-                                            {text}
-                                        </h2>
-                                    )
+                                    return <h2 key={idx}>{paragraph.replace(/\*\*/g, "")}</h2>
                                 }
-
-                                // Handle section headers like **Text:**
-                                if (paragraph.startsWith("**")) {
-                                    const headerMatch = paragraph.match(/^\*\*(.+?)\*\*(.*)/)
-                                    if (headerMatch) {
-                                        return (
-                                            <div key={idx} className="mt-8 mb-4">
-                                                <h3 className="text-xl font-bold text-foreground mb-2">
-                                                    {headerMatch[1]}
-                                                </h3>
-                                                {headerMatch[2] && (
-                                                    <p className="text-muted-foreground leading-relaxed">
-                                                        {headerMatch[2]}
-                                                    </p>
-                                                )}
-                                            </div>
-                                        )
-                                    }
+                                if (paragraph.startsWith(">")) {
+                                    return <blockquote key={idx}>{paragraph.substring(1).trim()}</blockquote>
                                 }
-
-                                // Handle bullet lists
-                                if (paragraph.startsWith("- ")) {
-                                    const items = paragraph
-                                        .split("\n")
-                                        .filter((l) => l.startsWith("- "))
+                                if (paragraph.includes("- ")) {
                                     return (
-                                        <ul key={idx} className="space-y-3 my-6">
-                                            {items.map((item, i) => (
-                                                <li
-                                                    key={i}
-                                                    className="flex items-start gap-3 text-muted-foreground"
-                                                >
-                                                    <div className="mt-2 h-1.5 w-1.5 rounded-full bg-[#FFB800] shrink-0" />
-                                                    <span className="leading-relaxed">
-                                                        {item.replace(/^- /, "").replace(/\*\*/g, "")}
-                                                    </span>
-                                                </li>
+                                        <ul key={idx}>
+                                            {paragraph.split("\n").map((line, lidx) => (
+                                                <li key={lidx}>{line.replace(/^- /, "")}</li>
                                             ))}
                                         </ul>
                                     )
                                 }
-
-                                // Handle quotes
-                                if (
-                                    paragraph.startsWith('"') ||
-                                    paragraph.startsWith("\u201C")
-                                ) {
-                                    return (
-                                        <blockquote
-                                            key={idx}
-                                            className="border-l-4 border-[#FFB800] pl-6 py-2 my-8 italic text-muted-foreground bg-muted/30 rounded-r-lg pr-6"
-                                        >
-                                            <p className="text-lg">{paragraph}</p>
-                                        </blockquote>
-                                    )
-                                }
-
-                                // Regular paragraphs
-                                return (
-                                    <p
-                                        key={idx}
-                                        className="text-muted-foreground leading-relaxed mb-6"
-                                    >
-                                        {paragraph}
-                                    </p>
-                                )
+                                return <p key={idx}>{paragraph}</p>
                             })}
-                        </div>
+                        </article>
 
-                        {/* Bottom Navigation */}
-                        <div className="mt-16 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
-                            <Link href="/news">
-                                <Button variant="outline" className="gap-2">
-                                    <ArrowLeft className="h-4 w-4" />
-                                    All News & Events
-                                </Button>
-                            </Link>
-                            <Link href="/contact">
-                                <Button className="bg-[#003366] text-white hover:bg-[#003366]/90 gap-2">
-                                    Contact Us for More Info
-                                </Button>
-                            </Link>
+                        <Separator className="my-20 bg-slate-100 dark:bg-slate-800" />
+
+                        {/* Author/Share Footer */}
+                        <div className="flex flex-col sm:flex-row items-center justify-between gap-8 py-8 px-10 bg-slate-50 dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800">
+                            <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-full bg-red-500 flex items-center justify-center text-white font-bold shadow-sm text-lg">
+                                    {article.author_name ? article.author_name[0] : "A"}
+                                </div>
+                                <div>
+                                    <p className="font-bold text-slate-900 dark:text-white">{article.author_name || "Anonymous"}</p>
+                                    <p className="text-xs text-slate-400 uppercase tracking-widest font-bold">Contributor</p>
+                                </div>
+                            </div>
+                            <Button variant="outline" className="rounded-xl gap-2 h-12 px-6 font-bold uppercase tracking-widest text-[10px]">
+                                <Share2 className="h-4 w-4" />
+                                {t('share_insight')}
+                            </Button>
                         </div>
                     </div>
-                </article>
+                </div>
+
+                {/* Related News */}
+                <section className="py-32 bg-slate-50/50 dark:bg-slate-950/50">
+                    <div className="mx-auto max-w-7xl px-6">
+                        <div className="flex items-center justify-between mb-16">
+                            <div>
+                                <h2 className="text-3xl font-extrabold tracking-tight text-slate-900 dark:text-white mb-2">{t('deepen_journey')}</h2>
+                                <p className="text-slate-500 font-medium">{t('more_insights')}</p>
+                            </div>
+                            <Link href="/news" className="hidden sm:block">
+                                <Button variant="ghost" className="rounded-xl font-bold uppercase tracking-widest text-[10px]">
+                                    {t('explore_full_catalog')}
+                                    <ArrowRight className="ml-2 h-4 w-4" />
+                                </Button>
+                            </Link>
+                        </div>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                            {relatedNews.length > 0 ? (
+                                relatedNews.map((item) => (
+                                    <NewsCard key={item.id} article={item} />
+                                ))
+                            ) : (
+                                [1, 2, 3].map(i => (
+                                    <div key={i} className="h-96 bg-white dark:bg-slate-900 rounded-2xl animate-pulse border border-slate-100 dark:border-slate-800" />
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </section>
             </main>
+
             <LandingFooter />
         </div>
     )
 }
+

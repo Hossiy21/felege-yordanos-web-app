@@ -13,7 +13,7 @@ func AuthGuard() gin.HandlerFunc {
 		var tokenString string
 
 		// First, try to get token from HttpOnly cookie
-		cookie, err := c.Cookie("sst_auth_token")
+		cookie, err := c.Cookie("sst_access_token")
 		if err == nil {
 			tokenString = cookie
 		} else {
@@ -38,6 +38,7 @@ func AuthGuard() gin.HandlerFunc {
 		}
 		c.Set("user_email", claims["email"])
 		c.Set("user_role", claims["role"])
+		c.Set("tenant_id", claims["tenant_id"])
 		c.Next()
 	}
 }

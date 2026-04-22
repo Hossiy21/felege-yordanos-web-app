@@ -2,109 +2,50 @@
 // This allows admin-created news to appear on the landing page
 
 export interface NewsArticle {
-    slug: string
+    id?: string
+    slug?: string
     title: string
-    date: string
-    category: string
-    description: string
+    summary: string
     content: string
-    createdAt: string
+    image_url?: string
+    category?: string // We'll map this or use metadata
+    author_email?: string
+    author_name?: string
+    tenant_id?: string
+    created_at: string
+    updated_at: string
 }
 
-const STORAGE_KEY = "felege-yordanos-news"
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
 
 // Default/seed news articles
 const defaultNews: NewsArticle[] = [
     {
-        slug: "annual-sunday-school-symposium-2026",
+        id: "annual-sunday-school-symposium-2026",
         title: "Annual Sunday School Symposium 2026",
-        date: "March 15, 2026",
         category: "Event",
-        description:
-            "Join us for our annual spiritual symposium featuring guest speakers and choir performances.",
-        content: `We are thrilled to announce the Annual Sunday School Symposium 2026, a landmark gathering of spiritual leaders, educators, and our vibrant church community.
-
-**Event Highlights:**
-
-- Keynote addresses by distinguished spiritual fathers
-- Panel discussions on modern Sunday School education
-- Youth choir and mezmur performances
-- Community fellowship lunch
-
-**When:** March 15, 2026, starting at 9:00 AM
-**Where:** Bole Debre Salem Medhanealem Cathedral Main Hall
-
-This symposium is a wonderful opportunity for all members of our Sunday School family to come together, learn, and grow in faith. Whether you are a teacher, student, or parent, there is something for everyone.
-
-We encourage all members to attend and invite friends and family. Let us come together to celebrate our shared faith and commitment to spiritual education.
-
-For registration and more details, please contact the Sunday School office or reach out through our contact page.`,
-        createdAt: "2026-02-01T09:00:00Z",
+        summary: "Join us for our annual spiritual symposium featuring guest speakers and choir performances.",
+        content: `Annual Sunday School Symposium...`,
+        created_at: "2026-02-01T09:00:00Z",
+        updated_at: "2026-02-01T09:00:00Z"
     },
     {
-        slug: "new-youth-mentorship-program-launched",
+        id: "new-youth-mentorship-program-launched",
         title: "New Youth Mentorship Program Launched",
-        date: "February 10, 2026",
         category: "News",
-        description:
-            "We are excited to announce a new mentorship program for our young members to guide them in their spiritual journey.",
-        content: `Felege Yordanos Sunday School is proud to launch a brand-new Youth Mentorship Program designed to guide our young members in their spiritual journey.
-
-**Program Overview:**
-
-The program pairs experienced church members and Sunday School teachers with younger students to provide one-on-one mentorship, spiritual guidance, and academic support.
-
-**Key Features:**
-
-- Weekly one-on-one mentorship sessions
-- Monthly group activities and outings
-- Scripture study and prayer partnerships
-- Life skills and character development workshops
-
-**Who Can Join?**
-
-- Mentors: Adults aged 25+ with a strong foundation in the Orthodox faith
-- Mentees: Youth aged 13-18 who are active members of our Sunday School
-
-**How to Apply:**
-
-Applications are now open. Visit the Sunday School office or contact us through the website to express your interest.
-
-We believe that investing in our youth is investing in the future of our church. Together, we can raise a generation rooted in faith, love, and service.`,
-        createdAt: "2026-02-10T09:00:00Z",
+        summary: "A new mentorship program for our young members.",
+        content: `New Youth Mentorship Program...`,
+        created_at: "2026-02-10T09:00:00Z",
+        updated_at: "2026-02-10T09:00:00Z"
     },
     {
-        slug: "community-outreach-visit-to-local-shelter",
+        id: "community-outreach-visit-to-local-shelter",
         title: "Community Outreach: Visit to Local Shelter",
-        date: "January 25, 2026",
         category: "Activity",
-        description:
-            "Our members visited the local community shelter to provide food and spiritual support.",
-        content: `On January 25, 2026, members of Felege Yordanos Sunday School organized a community outreach visit to a local shelter in Addis Ababa, demonstrating the love and compassion at the heart of our faith.
-
-**What We Did:**
-
-- Prepared and served meals to over 100 individuals
-- Distributed clothing and essential supplies
-- Offered prayers and spiritual encouragement
-- Spent quality time listening and sharing with shelter residents
-
-**Volunteer Highlights:**
-
-Over 40 Sunday School members, including youth and adults, participated in this outreach event. The enthusiasm and dedication of our volunteers was truly inspiring.
-
-**Impact:**
-
-The visit was met with heartfelt gratitude from the shelter community. Many expressed how the visit brought them hope and reminded them that they are not forgotten.
-
-**Looking Ahead:**
-
-This outreach is part of our ongoing commitment to serving the wider community. We plan to organize monthly outreach activities throughout 2026.
-
-If you would like to volunteer for future outreach events, please contact the Sunday School service committee. Together, we can make a difference in the lives of those in need.
-
-"Truly I tell you, whatever you did for one of the least of these brothers and sisters of mine, you did for me." - Matthew 25:40`,
-        createdAt: "2026-01-25T09:00:00Z",
+        summary: "Our members visited the local community shelter.",
+        content: `Community Outreach visit...`,
+        created_at: "2026-01-25T09:00:00Z",
+        updated_at: "2026-01-25T09:00:00Z"
     },
 ]
 
@@ -117,80 +58,99 @@ function generateSlug(title: string): string {
         .trim()
 }
 
-// Initialize localStorage with default news if empty
-function initializeStore(): void {
-    if (typeof window === "undefined") return
-    const stored = localStorage.getItem(STORAGE_KEY)
-    if (!stored) {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultNews))
-    }
-}
-
-// Get all news articles, sorted by date (newest first)
-export function getAllNews(): NewsArticle[] {
-    if (typeof window === "undefined") return defaultNews
-    initializeStore()
+// Get all news articles from API
+export async function getAllNews(page = 1, limit = 10, tenantId?: string): Promise<{ news: NewsArticle[], total: number, pages: number }> {
     try {
-        const stored = localStorage.getItem(STORAGE_KEY)
-        const articles: NewsArticle[] = stored ? JSON.parse(stored) : defaultNews
-        return articles.sort(
-            (a, b) =>
-                new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-        )
+        let url = `${API_BASE}/api/news/news?page=${page}&limit=${limit}`
+        if (tenantId) url += `&tenant_id=${tenantId}`
+
+        const response = await fetch(url)
+        if (!response.ok) throw new Error("Failed to fetch news")
+        return await response.json()
+    } catch (error) {
+        console.error("News fetch error:", error)
+        return { news: [], total: 0, pages: 0 }
+    }
+}
+
+// Get basic list for simple views
+export async function getRecentNews(limit = 3): Promise<NewsArticle[]> {
+    const data = await getAllNews(1, limit)
+    return data.news
+}
+
+// Get a single news article by ID
+export async function getNewsById(id: string): Promise<NewsArticle | null> {
+    try {
+        const response = await fetch(`${API_BASE}/api/news/news/${id}`)
+        if (!response.ok) return null
+        return await response.json()
     } catch {
-        return defaultNews
+        return null
     }
 }
 
-// Get a single news article by slug
-export function getNewsBySlug(slug: string): NewsArticle | undefined {
-    const articles = getAllNews()
-    return articles.find((a) => a.slug === slug)
-}
-
-// Add a new news article
-export function addNews(
-    article: Omit<NewsArticle, "slug" | "createdAt">
-): NewsArticle {
-    const articles = getAllNews()
-    const newArticle: NewsArticle = {
-        ...article,
-        slug: generateSlug(article.title),
-        createdAt: new Date().toISOString(),
+// Add a new news article via API
+export async function addNews(article: Partial<NewsArticle>): Promise<NewsArticle | null> {
+    try {
+        const response = await fetch(`${API_BASE}/api/news/news`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(article),
+            credentials: "include"
+        })
+        if (!response.ok) throw new Error("Create failed")
+        return await response.json()
+    } catch (error) {
+        console.error("Create news error:", error)
+        return null
     }
+}
 
-    // Ensure unique slug
-    let slugCount = 1
-    let finalSlug = newArticle.slug
-    while (articles.some((a) => a.slug === finalSlug)) {
-        finalSlug = `${newArticle.slug}-${slugCount}`
-        slugCount++
+// Upload news image
+export async function uploadImage(file: File): Promise<string | null> {
+    try {
+        const formData = new FormData()
+        formData.append("image", file)
+
+        const response = await fetch(`${API_BASE}/api/news/upload`, {
+            method: "POST",
+            body: formData,
+            credentials: "include"
+        })
+        if (!response.ok) throw new Error("Upload failed")
+        const data = await response.json()
+        return data.image_url
+    } catch (error) {
+        console.error("Upload error:", error)
+        return null
     }
-    newArticle.slug = finalSlug
-
-    articles.unshift(newArticle)
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(articles))
-    return newArticle
 }
 
-// Update an existing news article
-export function updateNews(
-    slug: string,
-    updates: Partial<Omit<NewsArticle, "slug" | "createdAt">>
-): NewsArticle | null {
-    const articles = getAllNews()
-    const index = articles.findIndex((a) => a.slug === slug)
-    if (index === -1) return null
-    articles[index] = { ...articles[index], ...updates }
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(articles))
-    return articles[index]
+// Update news
+export async function updateNews(id: string, updates: Partial<NewsArticle>): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE}/api/news/news/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(updates),
+            credentials: "include"
+        })
+        return response.ok
+    } catch {
+        return false
+    }
 }
 
-// Delete a news article
-export function deleteNews(slug: string): boolean {
-    const articles = getAllNews()
-    const filtered = articles.filter((a) => a.slug !== slug)
-    if (filtered.length === articles.length) return false
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(filtered))
-    return true
+// Delete news
+export async function deleteNews(id: string): Promise<boolean> {
+    try {
+        const response = await fetch(`${API_BASE}/api/news/news/${id}`, {
+            method: "DELETE",
+            credentials: "include"
+        })
+        return response.ok
+    } catch {
+        return false
+    }
 }

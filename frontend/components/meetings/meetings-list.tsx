@@ -1,4 +1,5 @@
-import { CalendarDays, Clock, Users, AlertTriangle, MessageSquare, Eye, Bell, MoreHorizontal } from "lucide-react"
+import { CalendarDays, Clock, Users, AlertTriangle, MessageSquare, Eye, Bell, MoreHorizontal, CheckCircle2 } from "lucide-react"
+import { useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -8,6 +9,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { EditMeetingDialog } from "./edit-meeting-dialog"
+import { CompleteMeetingDialog } from "./complete-meeting-dialog"
 
 export interface Meeting {
   id?: string
@@ -25,6 +28,8 @@ export interface Meeting {
 
 interface MeetingsListProps {
   meetings: Meeting[]
+  onDelete?: (id: string) => void
+  onUpdate?: (id: string, data: any) => void
 }
 
 function getStatusVariant(status: string) {
@@ -40,7 +45,9 @@ function getStatusVariant(status: string) {
   }
 }
 
-export function MeetingsList({ meetings }: MeetingsListProps) {
+export function MeetingsList({ meetings, onDelete, onUpdate }: MeetingsListProps) {
+  const [editingMeeting, setEditingMeeting] = useState<Meeting | null>(null)
+
   if (!meetings?.length) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center border-2 border-dashed rounded-2xl border-muted/50 bg-muted/5">
@@ -59,7 +66,7 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
     <div className="grid gap-4">
       {meetings.map((meeting, index) => (
         <Card
-          key={`${meeting.title}-${index}`}
+          key={`${meeting.id || meeting.title}-${index}`}
           className="group border-border/40 bg-card/50 backdrop-blur-sm hover:bg-card hover:shadow-md hover:border-border transition-all duration-300"
         >
           <CardContent className="p-0">
@@ -67,8 +74,18 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
               {/* Date Side Pillar (Mobile: Top Bar) */}
               <div className={`w-full sm:w-24 flex sm:flex-col items-center justify-center py-4 px-2 sm:border-r border-border/40 ${meeting.status === "Upcoming" ? "bg-primary/5" : "bg-muted/30"
                 }`}>
-                <span className="text-xs font-bold text-muted-foreground uppercase mb-1 sm:mb-0 mr-2 sm:mr-0">Feb</span>
-                <span className="text-2xl font-black text-foreground leading-none">11</span>
+                <span className="text-xs font-bold text-muted-foreground uppercase mb-1 sm:mb-0 mr-2 sm:mr-0">
+                  {(() => {
+                    const d = new Date(meeting.date)
+                    return isNaN(d.getTime()) ? (meeting.date?.split('-')[1] || "—") : d.toLocaleString('en-US', { month: 'short' })
+                  })()}
+                </span>
+                <span className="text-2xl font-black text-foreground leading-none">
+                  {(() => {
+                    const d = new Date(meeting.date)
+                    return isNaN(d.getTime()) ? (meeting.date?.split('-')[2] || "--") : d.getDate()
+                  })()}
+                </span>
               </div>
 
               {/* Main Content */}
@@ -128,11 +145,20 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
                   </Badge>
 
                   <div className="flex items-center gap-1">
+                    {meeting.status === "Upcoming" && meeting.id && (
+                      <CompleteMeetingDialog
+                        meetingId={meeting.id}
+                        meetingTitle={meeting.title}
+                        onComplete={onUpdate || (() => { })}
+                      >
+                        <Button variant="ghost" size="sm" className="h-8 text-xs gap-1.5 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-500/5">
+                          <CheckCircle2 className="h-3.5 w-3.5" />
+                          <span>Complete</span>
+                        </Button>
+                      </CompleteMeetingDialog>
+                    )}
                     <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                       <Eye className="h-4 w-4" />
-                    </Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 rounded-full text-primary hover:text-primary opacity-0 group-hover:opacity-100 transition-opacity">
-                      <Bell className="h-4 w-4" />
                     </Button>
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
@@ -141,9 +167,16 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem>Edit Meeting</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setEditingMeeting(meeting)}>
+                          Edit Meeting
+                        </DropdownMenuItem>
                         <DropdownMenuItem>Generate PDF Minutes</DropdownMenuItem>
-                        <DropdownMenuItem className="text-red-600">Cancel Session</DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-red-600"
+                          onClick={() => meeting.id && onDelete?.(meeting.id)}
+                        >
+                          Cancel Session
+                        </DropdownMenuItem>
                       </DropdownMenuContent>
                     </DropdownMenu>
                   </div>
@@ -153,6 +186,15 @@ export function MeetingsList({ meetings }: MeetingsListProps) {
           </CardContent>
         </Card>
       ))}
+
+      {editingMeeting && editingMeeting.id && (
+        <EditMeetingDialog
+          open={!!editingMeeting}
+          onOpenChange={(open) => !open && setEditingMeeting(null)}
+          meeting={editingMeeting}
+          onSave={onUpdate || (() => { })}
+        />
+      )}
     </div>
   )
 }

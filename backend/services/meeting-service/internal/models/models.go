@@ -18,6 +18,8 @@ type Meeting struct {
 	IsEmergency bool               `json:"is_emergency" bson:"is_emergency"`
 	Type        string             `json:"type" bson:"type"` // regular, emergency, special
 	Agenda      string             `json:"agenda,omitempty" bson:"agenda,omitempty"`
+	TenantID    string             `json:"tenant_id" bson:"tenant_id"`
 	CreatedAt   time.Time          `json:"created_at" bson:"created_at"`
 	UpdatedAt   time.Time          `json:"updated_at" bson:"updated_at"`
+	DeletedAt   *time.Time         `json:"deleted_at,omitempty" bson:"deleted_at,omitempty"`
 }

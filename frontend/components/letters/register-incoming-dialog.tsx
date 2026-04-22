@@ -61,6 +61,7 @@ interface RegisterIncomingDialogProps {
     onOpenChange: (open: boolean) => void
     onSubmit?: (letter: Letter) => void
     existingReferences?: string[]
+    initialData?: Letter | null
 }
 
 const DEPARTMENTS = [
@@ -381,6 +382,7 @@ export function RegisterIncomingDialog({
     onOpenChange,
     onSubmit,
     existingReferences = [],
+    initialData
 }: RegisterIncomingDialogProps) {
     // Form state
     const [subject, setSubject] = useState("")
@@ -426,11 +428,23 @@ export function RegisterIncomingDialog({
         setFormKey(prev => prev + 1)
     }, [])
 
+    useEffect(() => {
+        if (open && initialData) {
+            setSubject(initialData.subject || "")
+            setFrom(initialData.department || "") // Map department as from for now or handle appropriately
+            setReference(initialData.reference || "")
+            setDepartment(initialData.department || "")
+            setUrgency(initialData.status?.toLowerCase() === "urgent" ? "urgent" : "normal")
+            // Date parsing etc would go here if needed
+        } else if (open && !initialData) {
+            resetForm()
+        }
+    }, [open, initialData, resetForm])
+
     const handleSave = useCallback(
         async (status: "Draft" | "Approved") => {
             setSaving(true)
             try {
-                // Determine department ID based on selection (mocking 1 for now if not found)
                 const deptId = DEPARTMENTS.indexOf(department) + 1 || 1
                 const referenceNo = reference || `FY/IN/${new Date().getFullYear()}/${Math.floor(Math.random() * 1000).toString().padStart(3, '0')}`
 
@@ -445,8 +459,14 @@ export function RegisterIncomingDialog({
                     formData.append("pdf", pdfFile)
                 }
 
-                const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters`, {
-                    method: "POST",
+                const url = initialData?.id
+                    ? `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters/${initialData.id}`
+                    : `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters`
+
+                const method = initialData?.id ? "PUT" : "POST"
+
+                const response = await fetch(url, {
+                    method,
                     body: formData,
                     credentials: "include",
                 })
@@ -456,17 +476,17 @@ export function RegisterIncomingDialog({
                 }
 
                 const result = await response.json()
-                toast.success("Correspondence Saved Successfully")
+                toast.success(initialData?.id ? "Correspondence Updated" : "Correspondence Saved")
 
-                // Call onSubmit with the expected frontend format
                 onSubmit?.({
+                    id: initialData?.id || result.id,
                     reference: referenceNo,
                     subject: subject || "Untitled Letter",
                     department: department || "General",
                     status: status,
                     date: shortDate,
                     assigned: "You",
-                    pdfUrl: result.pdf_url,
+                    pdfUrl: result.pdf_url || initialData?.pdfUrl,
                 })
 
                 resetForm()
@@ -478,7 +498,7 @@ export function RegisterIncomingDialog({
                 setSaving(false)
             }
         },
-        [subject, department, reference, pdfFile, shortDate, onSubmit, resetForm, onOpenChange]
+        [subject, department, reference, pdfFile, shortDate, onSubmit, resetForm, onOpenChange, initialData]
     )
 
     const formData = {

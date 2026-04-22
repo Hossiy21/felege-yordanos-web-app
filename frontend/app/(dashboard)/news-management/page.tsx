@@ -7,8 +7,11 @@ import {
     getAllNews,
     addNews,
     deleteNews,
+    updateNews,
+    uploadImage,
     type NewsArticle,
 } from "@/lib/news-store"
+import { toast } from "sonner"
 import {
     Plus,
     Trash2,
@@ -19,6 +22,10 @@ import {
     X,
     Newspaper,
     ExternalLink,
+    Image as ImageIcon,
+    Upload,
+    Loader2,
+    User,
 } from "lucide-react"
 import Link from "next/link"
 
@@ -26,59 +33,143 @@ const categories = ["News", "Event", "Activity", "Announcement"]
 
 export default function NewsManagementPage() {
     const [articles, setArticles] = useState<NewsArticle[]>([])
+    const [isLoading, setIsLoading] = useState(true)
     const [showForm, setShowForm] = useState(false)
     const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null)
+    const [editingArticle, setEditingArticle] = useState<NewsArticle | null>(null)
 
     // Form state
     const [title, setTitle] = useState("")
     const [date, setDate] = useState("")
     const [category, setCategory] = useState("News")
+    const [authorName, setAuthorName] = useState("")
     const [description, setDescription] = useState("")
     const [content, setContent] = useState("")
+    const [imageFile, setImageFile] = useState<File | null>(null)
+    const [imagePreview, setImagePreview] = useState<string | null>(null)
+    const [isSubmitting, setIsSubmitting] = useState(false)
     const [errors, setErrors] = useState<Record<string, string>>({})
 
+    const fetchArticles = async () => {
+        setIsLoading(true)
+        try {
+            const data = await getAllNews()
+            setArticles(data.news)
+        } catch (err) {
+            toast.error("Failed to load news")
+        } finally {
+            setIsLoading(false)
+        }
+    }
+
     useEffect(() => {
-        setArticles(getAllNews())
+        fetchArticles()
     }, [])
 
     function validate(): boolean {
         const newErrors: Record<string, string> = {}
         if (!title.trim()) newErrors.title = "Title is required"
-        if (!date.trim()) newErrors.date = "Date is required"
         if (!description.trim()) newErrors.description = "Summary is required"
         if (!content.trim()) newErrors.content = "Content is required"
         setErrors(newErrors)
         return Object.keys(newErrors).length === 0
     }
 
-    function handleSubmit(e: React.FormEvent) {
+    async function handleSubmit(e: React.FormEvent) {
         e.preventDefault()
         if (!validate()) return
 
-        addNews({
-            title: title.trim(),
-            date: date.trim(),
-            category,
-            description: description.trim(),
-            content: content.trim(),
-        })
+        setIsSubmitting(true)
+        try {
+            let image_url = editingArticle?.image_url || ""
+            if (imageFile) {
+                const uploadedUrl = await uploadImage(imageFile)
+                if (uploadedUrl) {
+                    image_url = uploadedUrl
+                } else {
+                    toast.error("Image upload failed, continuing without image")
+                }
+            }
 
-        // Reset form
+            if (editingArticle?.id) {
+                // Update existing
+                const success = await updateNews(editingArticle.id, {
+                    title: title.trim(),
+                    category,
+                    author_name: authorName.trim(),
+                    summary: description.trim(),
+                    content: content.trim(),
+                    image_url: image_url,
+                })
+
+                if (success) {
+                    toast.success("Article updated successfully")
+                    resetForm()
+                    fetchArticles()
+                } else {
+                    toast.error("Failed to update article")
+                }
+            } else {
+                // Create new
+                const success = await addNews({
+                    title: title.trim(),
+                    category,
+                    author_name: authorName.trim(),
+                    summary: description.trim(),
+                    content: content.trim(),
+                    image_url: image_url,
+                })
+
+                if (success) {
+                    toast.success("News published successfully")
+                    resetForm()
+                    fetchArticles()
+                } else {
+                    toast.error("Failed to publish news")
+                }
+            }
+        } catch (err) {
+            toast.error("An error occurred")
+        } finally {
+            setIsSubmitting(false)
+        }
+    }
+
+    function resetForm() {
         setTitle("")
         setDate("")
         setCategory("News")
         setDescription("")
         setContent("")
+        setAuthorName("")
+        setImageFile(null)
+        setImagePreview(null)
         setErrors({})
         setShowForm(false)
-
-        // Refresh list
-        setArticles(getAllNews())
+        setEditingArticle(null)
     }
 
-    function handleDelete(slug: string) {
-        deleteNews(slug)
-        setArticles(getAllNews())
+    function handleEdit(article: NewsArticle) {
+        setEditingArticle(article)
+        setTitle(article.title)
+        setCategory(article.category || "News")
+        setAuthorName(article.author_name || "")
+        setDescription(article.summary)
+        setContent(article.content)
+        setImagePreview(article.image_url || null)
+        setShowForm(true)
+        // Scroll to form
+        window.scrollTo({ top: 0, behavior: "smooth" })
+    }
+
+    async function handleDelete(id: string) {
+        const success = await deleteNews(id)
+        if (success) {
+            toast.success("Article deleted")
+            fetchArticles()
+        } else {
+            toast.error("Delete failed")
+        }
         setDeleteConfirm(null)
     }
 
@@ -115,7 +206,7 @@ export default function NewsManagementPage() {
                 <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                     <h2 className="text-lg font-bold text-foreground mb-6 flex items-center gap-2">
                         <FileText className="h-5 w-5 text-[#FFB800]" />
-                        New Article
+                        {editingArticle ? "Edit Article" : "New Article"}
                     </h2>
                     <form onSubmit={handleSubmit} className="flex flex-col gap-5">
                         {/* Title */}
@@ -183,6 +274,18 @@ export default function NewsManagementPage() {
                             </div>
                         </div>
 
+                        {/* Author */}
+                        <div>
+                            <label className="text-sm font-medium text-foreground mb-1.5 block">
+                                Author Name
+                            </label>
+                            <Input
+                                value={authorName}
+                                onChange={(e) => setAuthorName(e.target.value)}
+                                placeholder="Enter author name (optional)..."
+                            />
+                        </div>
+
                         {/* Summary */}
                         <div>
                             <label className="text-sm font-medium text-foreground mb-1.5 block">
@@ -201,6 +304,51 @@ export default function NewsManagementPage() {
                                     {errors.description}
                                 </p>
                             )}
+                        </div>
+
+                        {/* Photo Upload */}
+                        <div>
+                            <label className="text-sm font-medium text-foreground mb-1.5 block">
+                                Cover Photo
+                            </label>
+                            <div className="flex flex-col items-center gap-4 p-6 border-2 border-dashed border-border rounded-lg bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer relative">
+                                <input
+                                    type="file"
+                                    accept="image/*"
+                                    className="absolute inset-0 opacity-0 cursor-pointer"
+                                    onChange={(e) => {
+                                        const file = e.target.files?.[0]
+                                        if (file) {
+                                            setImageFile(file)
+                                            setImagePreview(URL.createObjectURL(file))
+                                        }
+                                    }}
+                                />
+                                {imagePreview ? (
+                                    <div className="relative w-full aspect-video rounded-lg overflow-hidden border border-border">
+                                        <img src={imagePreview} alt="Preview" className="w-full h-full object-cover" />
+                                        <Button
+                                            type="button"
+                                            variant="destructive"
+                                            size="sm"
+                                            className="absolute top-2 right-2 h-7 w-7 p-0 rounded-full"
+                                            onClick={(e) => {
+                                                e.stopPropagation()
+                                                setImageFile(null)
+                                                setImagePreview(null)
+                                            }}
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </Button>
+                                    </div>
+                                ) : (
+                                    <div className="flex flex-col items-center gap-2 text-muted-foreground">
+                                        <Upload className="h-8 w-8" />
+                                        <p className="text-sm">Click or drag to upload a news image</p>
+                                        <p className="text-xs">PNG, JPG or WebP (Max 5MB)</p>
+                                    </div>
+                                )}
+                            </div>
                         </div>
 
                         {/* Full Content */}
@@ -243,10 +391,27 @@ export default function NewsManagementPage() {
                             </Button>
                             <Button
                                 type="submit"
-                                className="bg-[#003366] text-white hover:bg-[#003366]/90 font-bold gap-2"
+                                disabled={isSubmitting}
+                                className="bg-[#003366] text-white hover:bg-[#003366]/90 font-bold gap-2 min-w-[140px]"
                             >
-                                <Plus className="h-4 w-4" />
-                                Publish Article
+                                {isSubmitting ? (
+                                    <>
+                                        <Loader2 className="h-4 w-4 animate-spin" />
+                                        {editingArticle ? "Updating..." : "Publishing..."}
+                                    </>
+                                ) : (
+                                    <>
+                                        {editingArticle ? (
+                                            <>
+                                                <ImageIcon className="h-4 w-4" /> Save Changes
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Plus className="h-4 w-4" /> Publish Article
+                                            </>
+                                        )}
+                                    </>
+                                )}
                             </Button>
                         </div>
                     </form>
@@ -296,7 +461,12 @@ export default function NewsManagementPage() {
                     </Link>
                 </div>
 
-                {articles.length === 0 ? (
+                {isLoading ? (
+                    <div className="p-12 text-center flex flex-col items-center gap-4">
+                        <div className="h-8 w-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                        <p className="text-muted-foreground text-sm">Loading articles...</p>
+                    </div>
+                ) : articles.length === 0 ? (
                     <div className="p-12 text-center">
                         <Newspaper className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
                         <p className="text-muted-foreground font-medium">
@@ -310,22 +480,37 @@ export default function NewsManagementPage() {
                     <div className="divide-y divide-border">
                         {articles.map((article) => (
                             <div
-                                key={article.slug}
+                                key={article.id}
                                 className="px-6 py-4 flex items-center gap-4 hover:bg-muted/30 transition-colors group"
                             >
                                 {/* Category Badge */}
                                 <span
                                     className={`shrink-0 px-2.5 py-0.5 rounded-full text-xs font-medium ${article.category === "Event"
-                                            ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                                            : article.category === "Activity"
-                                                ? "bg-green-500/10 text-green-600 dark:text-green-400"
-                                                : article.category === "Announcement"
-                                                    ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
-                                                    : "bg-primary/10 text-primary"
+                                        ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+                                        : article.category === "Activity"
+                                            ? "bg-green-500/10 text-green-600 dark:text-green-400"
+                                            : article.category === "Announcement"
+                                                ? "bg-purple-500/10 text-purple-600 dark:text-purple-400"
+                                                : "bg-primary/10 text-primary"
                                         }`}
                                 >
-                                    {article.category}
+                                    {article.category || "News"}
                                 </span>
+
+                                {/* Thumbnail */}
+                                <div className="shrink-0 w-12 h-12 rounded-lg bg-muted overflow-hidden border border-border">
+                                    {article.image_url ? (
+                                        <img
+                                            src={article.image_url}
+                                            alt={article.title}
+                                            className="w-full h-full object-cover"
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full flex items-center justify-center text-muted-foreground/30">
+                                            <ImageIcon className="h-5 w-5" />
+                                        </div>
+                                    )}
+                                </div>
 
                                 {/* Content */}
                                 <div className="flex-1 min-w-0">
@@ -333,19 +518,25 @@ export default function NewsManagementPage() {
                                         {article.title}
                                     </h3>
                                     <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                                        {article.description}
+                                        {article.summary}
                                     </p>
+                                    {article.author_name && (
+                                        <div className="flex items-center gap-1.5 mt-1 text-[10px] text-muted-foreground/70">
+                                            <User className="h-2.5 w-2.5" />
+                                            {article.author_name}
+                                        </div>
+                                    )}
                                 </div>
 
                                 {/* Date */}
                                 <span className="hidden sm:flex items-center gap-1 text-xs text-muted-foreground shrink-0">
                                     <Calendar className="h-3 w-3" />
-                                    {article.date}
+                                    {new Date(article.created_at).toLocaleDateString()}
                                 </span>
 
                                 {/* Actions */}
                                 <div className="flex items-center gap-1 shrink-0">
-                                    <Link href={`/news/${article.slug}`} target="_blank">
+                                    <Link href={`/news/${article.id}`} target="_blank">
                                         <Button
                                             variant="ghost"
                                             size="sm"
@@ -355,7 +546,16 @@ export default function NewsManagementPage() {
                                         </Button>
                                     </Link>
 
-                                    {deleteConfirm === article.slug ? (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={() => handleEdit(article)}
+                                        className="h-8 w-8 p-0 text-muted-foreground hover:text-foreground"
+                                    >
+                                        <ImageIcon className="h-4 w-4" />
+                                    </Button>
+
+                                    {deleteConfirm === article.id ? (
                                         <div className="flex items-center gap-1">
                                             <Button
                                                 variant="ghost"
@@ -368,7 +568,7 @@ export default function NewsManagementPage() {
                                             <Button
                                                 variant="destructive"
                                                 size="sm"
-                                                onClick={() => handleDelete(article.slug)}
+                                                onClick={() => article.id && handleDelete(article.id)}
                                                 className="h-8 px-2 text-xs"
                                             >
                                                 Confirm
@@ -378,7 +578,7 @@ export default function NewsManagementPage() {
                                         <Button
                                             variant="ghost"
                                             size="sm"
-                                            onClick={() => setDeleteConfirm(article.slug)}
+                                            onClick={() => setDeleteConfirm(article.id || null)}
                                             className="h-8 w-8 p-0 text-muted-foreground hover:text-destructive"
                                         >
                                             <Trash2 className="h-4 w-4" />

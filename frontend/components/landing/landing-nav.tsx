@@ -4,7 +4,7 @@ import Link from "next/link"
 import { useState, useEffect } from "react"
 import { usePathname } from "next/navigation"
 import { Button } from "@/components/ui/button"
-import { Menu, X, ChevronRight } from "lucide-react"
+import { Menu, X, ChevronRight, LogIn } from "lucide-react"
 import { ThemeToggle } from "@/components/theme-toggle"
 import { LanguageToggle } from "@/components/language-toggle"
 import { useTranslation } from "react-i18next"
@@ -80,16 +80,16 @@ export function LandingNav() {
           <ThemeToggle />
           <div className="h-6 w-px bg-border/60 mx-1" />
           <Link href="/signin">
-            <Button variant="ghost" size="sm" className="text-[13px] font-semibold hover:bg-muted/60 transition-colors h-9 px-4 rounded-full">
-              {t("log_in")}
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-10 w-10 rounded-full hover:bg-muted/60 transition-all hover:scale-105"
+              title={t("log_in")}
+            >
+              <LogIn className="h-[18px] w-[18px] text-[#003366] dark:text-foreground" />
             </Button>
           </Link>
-          <Link href="/signup">
-            <Button size="sm" className="bg-[#FFB800] text-[#003366] hover:bg-[#FFB800]/90 font-bold text-[13px] h-9 px-5 rounded-full shadow-sm hover:shadow transition-all group">
-              {t("enroll_now")}
-              <ChevronRight className="ml-1 h-3.5 w-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
-            </Button>
-          </Link>
+
         </div>
 
         {/* Mobile toggle */}
@@ -133,16 +133,10 @@ export function LandingNav() {
               <ThemeToggle />
             </div>
             <div className="flex gap-3">
-              <Link href="/signin" className="flex-1">
-                <Button variant="outline" size="sm" className="w-full text-foreground rounded-xl h-11 font-semibold border-border/60">
-                  {t("log_in")}
-                </Button>
+              <Link href="/signin" className="flex items-center justify-center h-12 w-12 rounded-xl bg-muted border border-border/60">
+                <LogIn className="h-5 w-5 text-foreground" />
               </Link>
-              <Link href="/signup" className="flex-1">
-                <Button size="sm" className="w-full bg-[#FFB800] text-[#003366] hover:bg-[#FFB800]/90 font-bold rounded-xl h-11">
-                  {t("enroll_now")}
-                </Button>
-              </Link>
+
             </div>
           </div>
         </div>

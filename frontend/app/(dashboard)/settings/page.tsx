@@ -63,7 +63,7 @@ export default function SettingsPage() {
         <TabsList className="grid w-full grid-cols-4 lg:w-[400px]">
           <TabsTrigger value="general">{t("general")}</TabsTrigger>
           <TabsTrigger value="notifications">{t("notifications_tab")}</TabsTrigger>
-          <TabsTrigger value="security">{t("security")}</TabsTrigger>
+          <TabsTrigger value="security">{t("security_tab")}</TabsTrigger>
           <TabsTrigger value="appearance">{t("appearance_tab")}</TabsTrigger>
         </TabsList>
 
@@ -156,7 +156,7 @@ export default function SettingsPage() {
             <CardHeader>
               <div className="flex items-center gap-2">
                 <Shield className="h-5 w-5 text-primary" />
-                <CardTitle>{t("security")}</CardTitle>
+                <CardTitle>{t("security_tab")}</CardTitle>
               </div>
               <CardDescription>
                 Manage your password and security settings.

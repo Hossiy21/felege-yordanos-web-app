@@ -7,6 +7,11 @@ Thumbs.db
 *.out
 .env
 .env.*
+**/.env
+**/.env.*
+**/node_modules/
+**/dist/
+**/build/
 
 # =========================
 # Frontend - Next.js

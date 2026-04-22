@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useCallback, useMemo } from "react"
+import { useState, useCallback, useMemo, useEffect } from "react"
 import {
     Dialog,
     DialogContent,
@@ -36,6 +36,7 @@ import {
     CheckCircle2,
 } from "lucide-react"
 import { Badge } from "@/components/ui/badge"
+import QRCode from "qrcode"
 import type { Letter } from "@/components/letters/letter-table"
 
 // ──────────────────────────────────────────────
@@ -44,8 +45,11 @@ import type { Letter } from "@/components/letters/letter-table"
 interface NewLetterDialogProps {
     open: boolean
     onOpenChange: (open: boolean) => void
-    onSubmit?: (letter: Letter) => void
+    /** Called after a successful save — page should refresh its list */
+    onSubmit?: () => void
     existingReferences?: string[]
+    /** When provided the dialog opens in edit mode */
+    initialData?: Letter | null
 }
 
 const DEPARTMENTS = [
@@ -105,6 +109,9 @@ function LetterPreview({
     content,
     senderName,
     senderTitle,
+    signatureUrl,
+    stampUrl,
+    qrCodeUrl,
 }: {
     reference: string
     date: string
@@ -115,6 +122,9 @@ function LetterPreview({
     content: string
     senderName: string
     senderTitle: string
+    signatureUrl?: string
+    stampUrl?: string
+    qrCodeUrl?: string
 }) {
     return (
         <div className="bg-white dark:bg-zinc-900 rounded-lg shadow-lg border border-border mx-auto overflow-hidden" style={{ maxWidth: 780 }}>
@@ -197,17 +207,35 @@ function LetterPreview({
                 />
 
                 {/* Signature Block */}
-                <div className="mt-12 mb-6">
-                    <p className="text-sm text-muted-foreground mb-1">Respectfully,</p>
-                    <div className="mt-10 border-t border-dashed border-border pt-2 w-60">
-                        <p className="text-sm font-semibold text-foreground">
-                            {senderName || "________________"}
-                        </p>
-                        <p className="text-xs text-muted-foreground">
-                            {senderTitle || "Title / Position"}
-                        </p>
-                        <p className="text-xs text-muted-foreground mt-1">{date}</p>
+                <div className="mt-12 mb-6 flex items-end justify-between">
+                    <div>
+                        <p className="text-sm text-muted-foreground mb-1">Respectfully,</p>
+                        <div className="mt-10 border-t border-dashed border-border pt-2 w-60 relative">
+                            {/* Stamp */}
+                            {stampUrl && (
+                                <img src={stampUrl} alt="Stamp" className="absolute -top-16 left-6 w-24 h-24 object-contain opacity-80 mix-blend-multiply pointer-events-none" />
+                            )}
+                            {/* Signature */}
+                            {signatureUrl && (
+                                <img src={signatureUrl} alt="Signature" className="absolute bottom-8 left-2 w-32 h-16 object-contain pointer-events-none" />
+                            )}
+                            <p className="text-sm font-semibold text-foreground relative z-10 pt-4">
+                                {senderName || "________________"}
+                            </p>
+                            <p className="text-xs text-muted-foreground relative z-10">
+                                {senderTitle || "Title / Position"}
+                            </p>
+                            <p className="text-xs text-muted-foreground mt-1 relative z-10">{date}</p>
+                        </div>
                     </div>
+
+                    {/* QR Code */}
+                    {qrCodeUrl && (
+                        <div className="flex flex-col items-center gap-1 opacity-80">
+                            <img src={qrCodeUrl} alt="Verification QR" className="w-20 h-20 mix-blend-multiply border border-border/50 p-1 bg-white rounded-md" />
+                            <span className="text-[8px] text-muted-foreground uppercase tracking-wider font-semibold">Scan to Verify</span>
+                        </div>
+                    )}
                 </div>
             </div>
 
@@ -224,11 +252,14 @@ function LetterPreview({
 // ──────────────────────────────────────────────
 // Main Dialog
 // ──────────────────────────────────────────────
+const API_BASE = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
+
 export function NewLetterDialog({
     open,
     onOpenChange,
     onSubmit,
     existingReferences = [],
+    initialData,
 }: NewLetterDialogProps) {
     // Form state
     const [subject, setSubject] = useState("")
@@ -241,6 +272,21 @@ export function NewLetterDialog({
     const [reference, setReference] = useState("")
     const [senderName, setSenderName] = useState("")
     const [senderTitle, setSenderTitle] = useState("")
+    const [signatureUrl, setSignatureUrl] = useState("")
+    const [stampUrl, setStampUrl] = useState("")
+    const [qrCodeUrl, setQrCodeUrl] = useState("")
+
+    // Helper for file uploads to base64
+    const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>, setter: (url: string) => void) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            const reader = new FileReader()
+            reader.onloadend = () => {
+                setter(reader.result as string)
+            }
+            reader.readAsDataURL(file)
+        }
+    }
 
     // UI state
     const [saving, setSaving] = useState(false)
@@ -264,6 +310,17 @@ export function NewLetterDialog({
         })
     }, [])
 
+    // Pre-populate form when editing an existing letter
+    useEffect(() => {
+        if (open && initialData) {
+            setSubject(initialData.subject || "")
+            setDepartment(initialData.department || "")
+            setReference(initialData.reference || "")
+            setSenderName(initialData.assigned || "")
+            setRefGenerated(!!initialData.reference)
+        }
+    }, [open, initialData])
+
     const resetForm = useCallback(() => {
         setSubject("")
         setFrom("Felege Yordanos Sunday School")
@@ -275,64 +332,156 @@ export function NewLetterDialog({
         setReference("")
         setSenderName("")
         setSenderTitle("")
+        setSignatureUrl("")
+        setStampUrl("")
+        setQrCodeUrl("")
         setMode("compose")
         setRefGenerated(false)
     }, [])
 
     // ─── Generate unique reference ───
-    const handleGenerateReference = useCallback(() => {
+    const handleGenerateReference = useCallback(async () => {
         const deptCode = department ? department.slice(0, 3).toUpperCase() : "GEN"
         const ref = generateUniqueReference(deptCode, existingReferences)
         setReference(ref)
         setRefGenerated(true)
+
+        // Generate QR code for verification
+        try {
+            const qrData = await QRCode.toDataURL(`${API_BASE}/verify?ref=${encodeURIComponent(ref)}`, { margin: 1, width: 150 })
+            setQrCodeUrl(qrData)
+        } catch (err) {
+            console.error("QR Code Error:", err)
+        }
     }, [department, existingReferences])
+
+    // ─── Shared API call ───
+    const saveToBackend = useCallback(async (status: "draft" | "pending") => {
+        setSaving(true)
+        try {
+            const ref = reference || (() => {
+                const deptCode = department ? department.slice(0, 3).toUpperCase() : "GEN"
+                return generateUniqueReference(deptCode, existingReferences)
+            })()
+
+            const isEdit = !!initialData?.id
+            const url = isEdit
+                ? `${API_BASE}/api/letter/letters/${initialData!.id}`
+                : `${API_BASE}/api/letter/letters`
+            const method = isEdit ? "PUT" : "POST"
+
+            const formData = new FormData()
+            formData.append("reference_number", ref)
+            formData.append("letter_type", "outgoing")
+            formData.append("subject", subject || "Untitled Letter")
+            formData.append("department_name", department || "General")
+            formData.append("status", status)
+
+            if (status === "pending") {
+                try {
+                    const html2pdfModule = await import("html2pdf.js" as any)
+                    const html2pdf = html2pdfModule.default || html2pdfModule
+
+                    const htmlString = `
+                        <div style="font-family: 'Segoe UI', system-ui, Arial, sans-serif; padding: 40px; color: #1a1a1a; max-width: 800px; margin: 0 auto;">
+                            <div style="border-bottom: 2px solid #1a365d; padding-bottom: 12px; margin-bottom: 24px;">
+                                <h2 style="margin: 0; color: #1a365d;">ፈለገ ዮርዳኖስ ሰንበት ትምህርት ቤት</h2>
+                                <p style="margin: 2px 0; font-size: 12px; color: #666;">Felege Yordanos Sunday School</p>
+                                <p style="margin: 2px 0; font-size: 12px; color: #666;">Bole Debre Salem Medhanealem Cathedral — Addis Ababa, Ethiopia</p>
+                            </div>
+                            <div style="font-size: 13px; margin-bottom: 16px;">
+                                <div><span style="color: #666; font-weight: 600; width: 50px; display: inline-block; text-transform: uppercase; font-size: 11px;">Ref:</span> ${ref}</div>
+                                <div><span style="color: #666; font-weight: 600; width: 50px; display: inline-block; text-transform: uppercase; font-size: 11px;">Date:</span> ${currentDate}</div>
+                            </div>
+                            <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
+                            <div style="font-size: 13px; margin-bottom: 16px;">
+                                <div><span style="color: #666; font-weight: 600; width: 50px; display: inline-block; text-transform: uppercase; font-size: 11px;">From:</span> ${from}</div>
+                                <div><span style="color: #666; font-weight: 600; width: 50px; display: inline-block; text-transform: uppercase; font-size: 11px;">To:</span> ${to || "—"}</div>
+                                ${cc ? `<div><span style="color: #666; font-weight: 600; width: 50px; display: inline-block; text-transform: uppercase; font-size: 11px;">CC:</span> ${cc}</div>` : ""}
+                            </div>
+                            <hr style="border: none; border-top: 1px solid #eee; margin: 16px 0;" />
+                            <p style="font-weight: 600; text-decoration: underline; margin: 20px 0;">Subject: ${subject || "—"}</p>
+                            <div style="line-height: 1.8; font-size: 14px; min-height: 200px;">${content || ""}</div>
+                            
+                            <div style="margin-top: 60px; display: flex; align-items: flex-end; justify-content: space-between;">
+                                <div>
+                                    <p>Respectfully,</p>
+                                    <div style="border-top: 1px dashed #ccc; padding-top: 8px; width: 250px; position: relative; margin-top: 30px;">
+                                        ${stampUrl ? `<img src="${stampUrl}" style="position: absolute; top: -60px; left: 24px; width: 90px; height: 90px; object-fit: contain; opacity: 0.8; mix-blend-mode: multiply;" />` : ''}
+                                        ${signatureUrl ? `<img src="${signatureUrl}" style="position: absolute; bottom: 30px; left: 8px; width: 120px; height: 60px; object-fit: contain;" />` : ''}
+                                        <p style="position: relative; z-index: 10; margin-top: 15px; font-weight: 600;"><strong>${senderName || "________________"}</strong></p>
+                                        <p style="font-size:12px;color:#666; position: relative; z-index: 10; margin: 2px 0;">${senderTitle || "Title / Position"}</p>
+                                        <p style="font-size:12px;color:#666; position: relative; z-index: 10; margin: 2px 0;">${currentDate}</p>
+                                    </div>
+                                </div>
+                                ${qrCodeUrl ? `
+                                    <div style="text-align: center; opacity: 0.8;">
+                                        <img src="${qrCodeUrl}" style="width: 80px; height: 80px; border: 1px solid #ddd; padding: 4px; border-radius: 4px; mix-blend-mode: multiply;" />
+                                        <div style="font-size: 8px; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-top: 4px;">Verify</div>
+                                    </div>
+                                ` : ''}
+                            </div>
+                            <div style="margin-top: 40px; border-top: 1px solid #eee; padding-top: 12px; font-size: 10px; color: #999; text-align: center;">
+                                Bole Debre Salem Medhanealem Cathedral — Felege Yordanos Sunday School — Addis Ababa, Ethiopia
+                            </div>
+                        </div>
+                    `
+
+                    const element = document.createElement("div")
+                    element.innerHTML = htmlString
+
+                    const opt = {
+                        margin: 10,
+                        filename: 'letter.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2 },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    }
+
+                    const pdfBlob = await html2pdf().set(opt).from(element).outputPdf('blob')
+                    const safeRef = ref.replace(/[\/\\]/g, '-')
+                    formData.append("pdf", new File([pdfBlob], `${safeRef}.pdf`, { type: 'application/pdf' }))
+                } catch (pdfErr) {
+                    console.error("Failed to generate PDF:", pdfErr)
+                    const { toast } = await import("sonner")
+                    toast.warning("Letter saved, but PDF generation failed.")
+                }
+            }
+
+            const res = await fetch(url, {
+                method,
+                body: formData,
+                credentials: "include",
+            })
+
+            if (!res.ok) {
+                const errData = await res.json().catch(() => ({}))
+                throw new Error(errData.error || `Server returned ${res.status}`)
+            }
+
+            onSubmit?.()
+            resetForm()
+            onOpenChange(false)
+        } catch (err: any) {
+            console.error("Save letter failed:", err)
+            // Surface error via a toast — sonner is already set up in the project
+            const { toast } = await import("sonner")
+            toast.error(err.message || "Failed to save letter. Please try again.")
+        } finally {
+            setSaving(false)
+        }
+    }, [reference, department, subject, existingReferences, initialData, onSubmit, resetForm, onOpenChange])
 
     // ─── Save Draft ───
     const handleSaveDraft = useCallback(() => {
-        setSaving(true)
-        const ref = reference || (() => {
-            const deptCode = department ? department.slice(0, 3).toUpperCase() : "GEN"
-            return generateUniqueReference(deptCode, existingReferences)
-        })()
-        setTimeout(() => {
-            const letter: Letter = {
-                reference: ref,
-                subject: subject || "Untitled Letter",
-                department: department || "General",
-                status: "Draft",
-                date: shortDate,
-                assigned: senderName || "You",
-            }
-            onSubmit?.(letter)
-            resetForm()
-            onOpenChange(false)
-            setSaving(false)
-        }, 600)
-    }, [subject, department, reference, existingReferences, senderName, shortDate, onSubmit, resetForm, onOpenChange])
+        saveToBackend("draft")
+    }, [saveToBackend])
 
-    // ─── Submit ───
+    // ─── Submit for Approval ───
     const handleSubmit = useCallback(() => {
         if (!subject.trim() || !department) return
-        setSaving(true)
-        const ref = reference || (() => {
-            const deptCode = department.slice(0, 3).toUpperCase()
-            return generateUniqueReference(deptCode, existingReferences)
-        })()
-        setTimeout(() => {
-            const letter: Letter = {
-                reference: ref,
-                subject,
-                department,
-                status: "Pending",
-                date: shortDate,
-                assigned: senderName || "You",
-            }
-            onSubmit?.(letter)
-            resetForm()
-            onOpenChange(false)
-            setSaving(false)
-        }, 800)
-    }, [subject, department, reference, existingReferences, senderName, shortDate, onSubmit, resetForm, onOpenChange])
+        saveToBackend("pending")
+    }, [subject, department, saveToBackend])
 
     // ─── Print Preview ───
     const handlePrint = useCallback(() => {
@@ -374,13 +523,23 @@ export function NewLetterDialog({
                 <hr />
                 <p class="subject">Subject: ${subject || "—"}</p>
                 <div class="body">${content || ""}</div>
-                <div class="signature">
-                    <p>Respectfully,</p>
-                    <div class="line">
-                        <p><strong>${senderName || "________________"}</strong></p>
-                        <p style="font-size:12px;color:#666">${senderTitle || "Title / Position"}</p>
-                        <p style="font-size:12px;color:#666">${currentDate}</p>
+                <div class="signature" style="display: flex; align-items: flex-end; justify-content: space-between;">
+                    <div>
+                        <p>Respectfully,</p>
+                        <div class="line" style="position: relative; margin-top: 30px;">
+                            ${stampUrl ? `<img src="${stampUrl}" style="position: absolute; top: -60px; left: 24px; width: 90px; height: 90px; object-fit: contain; opacity: 0.8; mix-blend-mode: multiply;" />` : ''}
+                            ${signatureUrl ? `<img src="${signatureUrl}" style="position: absolute; bottom: 30px; left: 8px; width: 120px; height: 60px; object-fit: contain;" />` : ''}
+                            <p style="position: relative; z-index: 10; margin-top: 15px;"><strong>${senderName || "________________"}</strong></p>
+                            <p style="font-size:12px;color:#666; position: relative; z-index: 10;">${senderTitle || "Title / Position"}</p>
+                            <p style="font-size:12px;color:#666; position: relative; z-index: 10;">${currentDate}</p>
+                        </div>
                     </div>
+                    ${qrCodeUrl ? `
+                        <div style="text-align: center; opacity: 0.8;">
+                            <img src="${qrCodeUrl}" style="width: 80px; height: 80px; border: 1px solid #ddd; padding: 4px; border-radius: 4px; mix-blend-mode: multiply;" />
+                            <div style="font-size: 8px; color: #666; text-transform: uppercase; font-weight: 600; letter-spacing: 1px; margin-top: 4px;">Verify</div>
+                        </div>
+                    ` : ''}
                 </div>
                 <div class="footer">Bole Debre Salem Medhanealem Cathedral — Felege Yordanos Sunday School — Addis Ababa, Ethiopia</div>
             </body></html>
@@ -657,6 +816,30 @@ export function NewLetterDialog({
                                             className="h-9"
                                         />
                                     </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                                            Digital Stamp (Optional)
+                                        </Label>
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => handleImageUpload(e, setStampUrl)}
+                                            className="h-9 cursor-pointer file:text-sm"
+                                        />
+                                        {stampUrl && <span className="text-[10px] text-emerald-600 font-medium">Stamp attached ✓</span>}
+                                    </div>
+                                    <div className="flex flex-col gap-1.5">
+                                        <Label className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+                                            Digital Signature (Optional)
+                                        </Label>
+                                        <Input
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={(e) => handleImageUpload(e, setSignatureUrl)}
+                                            className="h-9 cursor-pointer file:text-sm"
+                                        />
+                                        {signatureUrl && <span className="text-[10px] text-emerald-600 font-medium">Signature attached ✓</span>}
+                                    </div>
                                 </div>
                                 <div className="px-4 pb-3 flex items-center gap-2 text-xs text-muted-foreground">
                                     <span>Date:</span>
@@ -689,6 +872,9 @@ export function NewLetterDialog({
                                 content={content}
                                 senderName={senderName}
                                 senderTitle={senderTitle}
+                                signatureUrl={signatureUrl}
+                                stampUrl={stampUrl}
+                                qrCodeUrl={qrCodeUrl}
                             />
                         </div>
                     )}

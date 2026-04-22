@@ -1,0 +1,138 @@
+Folder PATH listing for volume New Volume
+Volume serial number is 9E81-E849
+E:.
+¦   a.txt
+¦   
++---auth-service
+¦   ¦   .env
+¦   ¦   debug_json.go
+¦   ¦   debug_login.go
+¦   ¦   debug_users.go
+¦   ¦   Dockerfile
+¦   ¦   force_seed.go
+¦   ¦   go.mod
+¦   ¦   go.sum
+¦   ¦   list_users.go
+¦   ¦   seed.go
+¦   ¦   test_search.go
+¦   ¦   users_dump.json
+¦   ¦   
+¦   +---cmd
+¦   ¦       main.go
+¦   ¦       
+¦   +---internal
+¦       +---auth
+¦       ¦       auth.go
+¦       ¦       
+¦       +---database
+¦       ¦       db.go
+¦       ¦       
+¦       +---handler
+¦       ¦       auth_handler.go
+¦       ¦       
+¦       +---middleware
+¦       ¦       auth_middleware.go
+¦       ¦       rate_limiter.go
+¦       ¦       
+¦       +---models
+¦       ¦       models.go
+¦       ¦       
+¦       +---utils
+¦               jwt.go
+¦               password.go
+¦               
++---gateway-service
+¦   ¦   .env
+¦   ¦   Dockerfile
+¦   ¦   go.mod
+¦   ¦   go.sum
+¦   ¦   main.go
+¦   ¦   
+¦   +---cmd
+¦   ¦       main.go
+¦   ¦       
+¦   +---middleware
+¦   ¦       auth_middleware.go
+¦   ¦       
+¦   +---proxy
+¦           reverse_proxy.go
+¦           
++---letter-service
+¦   ¦   .air.toml
+¦   ¦   .env
+¦   ¦   delete_incoming.go
+¦   ¦   Dockerfile
+¦   ¦   go.mod
+¦   ¦   go.sum
+¦   ¦   main.exe
+¦   ¦   test_cors.go
+¦   ¦   tmp_build.exe
+¦   ¦   
+¦   +---cmd
+¦   ¦       main.go
+¦   ¦       
+¦   +---internal
+¦   ¦   +---database
+¦   ¦   ¦       db.go
+¦   ¦   ¦       
+¦   ¦   +---handlers
+¦   ¦   ¦       letters.go
+¦   ¦   ¦       
+¦   ¦   +---middleware
+¦   ¦   ¦       auth_middleware.go
+¦   ¦   ¦       
+¦   ¦   +---models
+¦   ¦   ¦       models.go
+¦   ¦   ¦       
+¦   ¦   +---utils
+¦   ¦           minio.go
+¦   ¦           
+¦   +---tmp
++---meeting-service
+¦   ¦   .env
+¦   ¦   go.mod
+¦   ¦   go.sum
+¦   ¦   
+¦   +---cmd
+¦   ¦       main.go
+¦   ¦       
+¦   +---internal
+¦       +---database
+¦       ¦       db.go
+¦       ¦       
+¦       +---handlers
+¦       ¦       meetings.go
+¦       ¦       
+¦       +---middleware
+¦       ¦       auth_middleware.go
+¦       ¦       
+¦       +---models
+¦               models.go
+¦               
++---news-service
+    ¦   .env
+    ¦   Dockerfile
+    ¦   go.mod
+    ¦   go.sum
+    ¦   
+    +---cmd
+    ¦       main.go
+    ¦       
+    +---internal
+        +---database
+        ¦       db.go
+        ¦       
+        +---handler
+        ¦       gallery.go
+        ¦       news.go
+        ¦       
+        +---middleware
+        ¦       auth_middleware.go
+        ¦       
+        +---models
+        ¦       gallery.go
+        ¦       news.go
+        ¦       
+        +---utils
+                minio.go
+                

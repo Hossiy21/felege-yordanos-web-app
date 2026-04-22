@@ -3,7 +3,9 @@
 import { useState, useEffect, useCallback } from "react"
 import { LetterTable, type Letter } from "@/components/letters/letter-table"
 import { RegisterIncomingDialog } from "@/components/letters/register-incoming-dialog"
+import { PdfViewerModal } from "@/components/letters/pdf-viewer-modal"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { Plus, Mail, Clock, AlertCircle, Archive, Inbox } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -15,12 +17,21 @@ export default function IncomingLettersPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [pdfOpen, setPdfOpen] = useState(false)
+  const [selectedLetter, setSelectedLetter] = useState<Letter | null>(null)
+  const [selectedLetterForEdit, setSelectedLetterForEdit] = useState<Letter | null>(null)
 
-  const fetchLetters = useCallback(async () => {
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize] = useState(10)
+  const [totalItems, setTotalItems] = useState(0)
+
+  const fetchLetters = useCallback(async (page: number = 1, limit: number = 10) => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters`, {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters?page=${page}&limit=${limit}&type=incoming`, {
         credentials: "include",
       })
 
@@ -30,38 +41,85 @@ export default function IncomingLettersPage() {
 
       const data = await response.json()
 
+      if (!data.letters) {
+        throw new Error(data.error || "Invalid response format from server")
+      }
+
       // Transform backend data to frontend format
-      const transformed: Letter[] = data.map((item: any) => ({
+      const transformed: Letter[] = data.letters.map((item: any) => ({
+        id: item.id,
         reference: item.reference_number || "—",
         subject: item.subject || "No Subject",
         department: item.department_name || "General",
-        status: item.status.charAt(0).toUpperCase() + item.status.slice(1), // Capitalize first letter
-        date: new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
+        status: item.status ? item.status.charAt(0).toUpperCase() + item.status.slice(1) : "Pending",
+        date: item.created_at ? new Date(item.created_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "—",
         assigned: item.owner_email || "Unassigned",
         pdfUrl: item.pdf_url,
       }))
 
       setLetters(transformed)
-    } catch (err) {
+      setTotalPages(data.pages || 1)
+      setTotalItems(data.total || 0)
+      setCurrentPage(data.page || 1)
+    } catch (err: any) {
       console.error("Fetch failed:", err)
-      setError("Unable to load correspondence records.")
+      setError(err.message || "Unable to load correspondence records.")
     } finally {
       setIsLoading(false)
     }
-  }, [])
+  }, []) // Removed dependency on pageSize to avoid unnecessary recreations
 
   useEffect(() => {
-    fetchLetters()
-  }, [fetchLetters])
+    fetchLetters(currentPage, pageSize)
+  }, [currentPage, pageSize, fetchLetters])
 
   const handleRegisterLetter = (letter: Letter) => {
-    // Optimistic update or refresh
-    setLetters((prev) => [letter, ...prev])
+    setLetters((prev) => {
+      const idx = prev.findIndex(l => l.id === letter.id)
+      if (idx > -1) {
+        const updated = [...prev]
+        updated[idx] = letter
+        return updated
+      }
+      return [letter, ...prev]
+    })
+  }
+
+  const handleEditLetter = (letter: Letter) => {
+    setSelectedLetterForEdit(letter)
+    setDialogOpen(true)
+  }
+
+  const handleDeleteLetter = async (letter: Letter) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/letter/letters/${letter.id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+
+      if (!response.ok) throw new Error("Delete failed")
+
+      setLetters((prev) => prev.filter(l => l.id !== letter.id))
+      toast.success("Correspondence moved to trash")
+    } catch (err) {
+      console.error("Delete failed:", err)
+      toast.error("Failed to delete record")
+    }
+  }
+
+  const handleRegisterDialogOpenChange = (open: boolean) => {
+    setDialogOpen(open)
+    if (!open) setSelectedLetterForEdit(null)
+  }
+
+  const handleViewLetter = (letter: Letter) => {
+    setSelectedLetter(letter)
+    setPdfOpen(true)
   }
 
   // Calculate statistics
   const stats = {
-    total: letters.length,
+    total: totalItems,
     pending: letters.filter(l => l.status === "Pending").length,
     urgent: letters.filter(l => l.status === "Draft").length,
     archived: letters.filter(l => l.status === "Archived").length,
@@ -212,7 +270,7 @@ export default function IncomingLettersPage() {
                   <h3 className="text-lg font-semibold">{t("fetch_error_title") || "Connection Error"}</h3>
                   <p className="text-sm text-muted-foreground max-w-xs">{error}</p>
                 </div>
-                <Button variant="outline" size="sm" onClick={() => fetchLetters()} className="mt-2">
+                <Button variant="outline" size="sm" onClick={() => fetchLetters(currentPage)} className="mt-2">
                   Try Again
                 </Button>
               </div>
@@ -232,7 +290,22 @@ export default function IncomingLettersPage() {
                 </Button>
               </div>
             ) : (
-              <LetterTable letters={letters} type="incoming" />
+              <LetterTable
+                letters={letters}
+                type="incoming"
+                onViewLetter={handleViewLetter}
+                onEditLetter={handleEditLetter}
+                onDeleteLetter={handleDeleteLetter}
+                currentPage={currentPage}
+                totalPages={totalPages}
+                pageSize={pageSize}
+                totalItems={totalItems}
+                onPageChange={(page) => setCurrentPage(page)}
+                onPageSizeChange={(size) => {
+                  setPageSize(size)
+                  setCurrentPage(1) // Reset to first page when page size changes
+                }}
+              />
             )}
           </CardContent>
         </Card>
@@ -240,10 +313,29 @@ export default function IncomingLettersPage() {
 
       <RegisterIncomingDialog
         open={dialogOpen}
-        onOpenChange={setDialogOpen}
+        onOpenChange={handleRegisterDialogOpenChange}
         onSubmit={handleRegisterLetter}
         existingReferences={existingRefs}
+        initialData={selectedLetterForEdit}
       />
+
+      {selectedLetter && (
+        <PdfViewerModal
+          open={pdfOpen}
+          onOpenChange={setPdfOpen}
+          pdfUrl={(() => {
+            const raw = selectedLetter.pdfUrl
+            if (!raw) return `/sample-letter.pdf`
+            // Extract the object key (filename) from the MinIO URL and proxy through our backend
+            // MinIO URL format: http://localhost:9000/bucket-name/filename.pdf
+            const key = raw.split("/").slice(-1)[0]
+            const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"
+            return `${apiBase}/api/letter/letters/pdf-proxy?key=${encodeURIComponent(key)}`
+          })()}
+          title={selectedLetter.subject}
+          reference={selectedLetter.reference}
+        />
+      )}
     </div>
   )
 }

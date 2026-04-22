@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Trash2, Edit2, Search, Filter, LayoutGrid, List, Plus, Image as ImageIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,42 +32,40 @@ import {
 import { useTranslation } from "react-i18next"
 import Image from "next/image"
 
+import { GalleryItem, getGalleryItems, uploadGalleryImage, createGalleryItem, deleteGalleryItem } from "@/lib/gallery-store"
+
 export default function GalleryManagementPage() {
     const { t } = useTranslation()
     const [activeView, setActiveView] = useState<"grid" | "list">("grid")
     const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+    const [isLoading, setIsLoading] = useState(true)
+    const [isUploading, setIsUploading] = useState(false)
 
-    // Church-specific images for administration consistency
-    const [photos, setPhotos] = useState([
-        {
-            id: 1,
-            title: "Cathedral Epiphany Celebration",
-            category: "epiphany",
-            date: "Jan 19, 2026",
-            image: "https://images.unsplash.com/photo-1545652936-f0815437819c?q=80&w=2070&auto=format&fit=crop"
-        },
-        {
-            id: 2,
-            title: "Divine Liturgy Gathering",
-            category: "service",
-            date: "Feb 10, 2026",
-            image: "https://images.unsplash.com/photo-1519491050282-30cdb8fa1aff?q=80&w=2070&auto=format&fit=crop"
-        },
-        {
-            id: 3,
-            title: "Cathedral Interior Icons",
-            category: "service",
-            date: "Feb 15, 2026",
-            image: "https://images.unsplash.com/photo-1548013146-72479768bbaa?q=80&w=2070&auto=format&fit=crop"
-        },
-        {
-            id: 4,
-            title: "Sunday School Graduation",
-            category: "graduation",
-            date: "Jun 15, 2025",
-            image: "https://images.unsplash.com/photo-1523050335102-c3250d85720d?q=80&w=2070&auto=format&fit=crop"
-        },
-    ])
+    // Form state
+    const [title, setTitle] = useState("")
+    const [category, setCategory] = useState("")
+    const [description, setDescription] = useState("")
+    const [selectedFile, setSelectedFile] = useState<File | null>(null)
+    const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+
+    const [photos, setPhotos] = useState<GalleryItem[]>([])
+
+    // Load items on mount
+    useEffect(() => {
+        loadGallery()
+    }, [])
+
+    const loadGallery = async () => {
+        try {
+            setIsLoading(true)
+            const data = await getGalleryItems(1, 100)
+            setPhotos(data.items || [])
+        } catch (error) {
+            console.error("Failed to load gallery:", error)
+        } finally {
+            setIsLoading(false)
+        }
+    }
 
     const categories = [
         { id: "epiphany", label: t("category_epiphany") },
@@ -76,8 +74,61 @@ export default function GalleryManagementPage() {
         { id: "graduation", label: t("category_graduation") },
     ]
 
-    const handleDelete = (id: number) => {
-        setPhotos(photos.filter(p => p.id !== id))
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0]
+        if (file) {
+            setSelectedFile(file)
+            const url = URL.createObjectURL(file)
+            setPreviewUrl(url)
+        }
+    }
+
+    const handleUpload = async () => {
+        if (!selectedFile || !title || !category) {
+            alert("Please fill in title, category, and select an image")
+            return
+        }
+
+        try {
+            setIsUploading(true)
+
+            // 1. Upload image to MinIO
+            const { image_url } = await uploadGalleryImage(selectedFile)
+
+            // 2. Save metadata to DB
+            await createGalleryItem({
+                title,
+                category,
+                description,
+                image_url
+            })
+
+            // 3. Reset form and reload
+            setIsAddDialogOpen(false)
+            setTitle("")
+            setCategory("")
+            setDescription("")
+            setSelectedFile(null)
+            setPreviewUrl(null)
+
+            await loadGallery()
+        } catch (error) {
+            console.error("Upload failed:", error)
+            alert("Failed to upload image. Please try again.")
+        } finally {
+            setIsUploading(false)
+        }
+    }
+
+    const handleDelete = async (id: string) => {
+        if (confirm("Are you sure you want to delete this photo?")) {
+            try {
+                await deleteGalleryItem(id)
+                setPhotos(photos.filter(p => p.id !== id))
+            } catch (error) {
+                console.error("Delete failed:", error)
+            }
+        }
     }
 
     return (
@@ -107,11 +158,11 @@ export default function GalleryManagementPage() {
                         <div className="grid gap-6 py-4">
                             <div className="grid gap-2">
                                 <Label htmlFor="title" className="text-sm font-semibold">{t("photo_title")}</Label>
-                                <Input id="title" placeholder="e.g. Timket 2026 Celebration" className="rounded-xl border-border/60" />
+                                <Input id="title" value={title} onChange={e => setTitle(e.target.value)} placeholder="e.g. Timket 2026 Celebration" className="rounded-xl border-border/60" />
                             </div>
                             <div className="grid gap-2">
                                 <Label htmlFor="category" className="text-sm font-semibold">{t("photo_category")}</Label>
-                                <Select>
+                                <Select value={category} onValueChange={setCategory}>
                                     <SelectTrigger className="rounded-xl border-border/60 h-11">
                                         <SelectValue placeholder="Select a category" />
                                     </SelectTrigger>
@@ -123,23 +174,35 @@ export default function GalleryManagementPage() {
                                 </Select>
                             </div>
                             <div className="grid gap-2">
+                                <Label htmlFor="description" className="text-sm font-semibold">Description</Label>
+                                <Input id="description" value={description} onChange={e => setDescription(e.target.value)} placeholder="Brief description of the photo..." className="rounded-xl border-border/60" />
+                            </div>
+                            <div className="grid gap-2">
                                 <Label className="text-sm font-semibold">{t("select_image")}</Label>
-                                <div className="border-2 border-dashed border-border/60 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group">
-                                    <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
-                                        <ImageIcon className="h-6 w-6 text-primary" />
-                                    </div>
-                                    <div className="text-center">
-                                        <p className="text-sm font-bold text-foreground">Click to upload or drag and drop</p>
-                                        <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP (max. 5MB)</p>
-                                    </div>
-                                </div>
+                                <label className="border-2 border-dashed border-border/60 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 bg-muted/30 hover:bg-muted/50 transition-colors cursor-pointer group relative overflow-hidden">
+                                    <input type="file" accept="image/*" onChange={handleFileChange} className="hidden" />
+                                    {previewUrl ? (
+                                        <Image src={previewUrl} alt="Preview" fill className="object-cover" />
+                                    ) : (
+                                        <>
+                                            <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:scale-110 transition-transform">
+                                                <ImageIcon className="h-6 w-6 text-primary" />
+                                            </div>
+                                            <div className="text-center">
+                                                <p className="text-sm font-bold text-foreground">Click to upload or drag and drop</p>
+                                                <p className="text-xs text-muted-foreground mt-1">PNG, JPG or WebP (max. 5MB)</p>
+                                            </div>
+                                        </>
+                                    )}
+                                </label>
                             </div>
                         </div>
                         <DialogFooter className="gap-2 sm:gap-0">
-                            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl border-border/60">Cancel</Button>
-                            <Button onClick={() => setIsAddDialogOpen(false)} className="rounded-xl bg-primary text-primary-foreground font-bold px-8">
-                                {t("upload_photo")}
+                            <Button variant="outline" onClick={() => setIsAddDialogOpen(false)} className="rounded-xl border-border/60" disabled={isUploading}>Cancel</Button>
+                            <Button onClick={handleUpload} className="rounded-xl bg-primary text-primary-foreground font-bold px-8" disabled={isUploading}>
+                                {isUploading ? "Uploading..." : t("upload_photo")}
                             </Button>
+
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -187,47 +250,55 @@ export default function GalleryManagementPage() {
             </Card>
 
             {/* Content */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                {photos.map((photo) => (
-                    <Card key={photo.id} className="group overflow-hidden rounded-2xl border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 bg-background/60 backdrop-blur-sm border-transparent hover:border-primary/20">
-                        <div className="relative aspect-square overflow-hidden">
-                            <Image
-                                src={photo.image}
-                                alt={photo.title}
-                                fill
-                                unoptimized
-                                className="object-cover transition-transform duration-500 group-hover:scale-105"
-                            />
-                            <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
-                                <Button variant="secondary" size="icon" className="h-10 w-10 rounded-full bg-white/90 hover:bg-white text-foreground shadow-sm">
-                                    <Edit2 className="h-4 w-4" />
-                                </Button>
-                                <Button
-                                    variant="destructive"
-                                    size="icon"
-                                    className="h-10 w-10 rounded-full shadow-sm"
-                                    onClick={() => handleDelete(photo.id)}
-                                >
-                                    <Trash2 className="h-4 w-4" />
-                                </Button>
-                            </div>
-                        </div>
-                        <CardHeader className="p-4">
-                            <div className="flex justify-between items-start gap-2">
-                                <div>
-                                    <CardTitle className="text-sm font-bold line-clamp-1">{photo.title}</CardTitle>
-                                    <CardDescription className="text-[11px] font-medium mt-1 uppercase tracking-wider text-primary">
-                                        {t(`category_${photo.category}`)}
-                                    </CardDescription>
+            {isLoading ? (
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-6 animate-pulse">
+                    {[1, 2, 3, 4].map(i => (
+                        <div key={i} className="aspect-square bg-muted/40 rounded-2xl" />
+                    ))}
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {photos.map((photo) => (
+                        <Card key={photo.id} className="group overflow-hidden rounded-2xl border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 bg-background/60 backdrop-blur-sm border-transparent hover:border-primary/20">
+                            <div className="relative aspect-square overflow-hidden bg-muted/20">
+                                <Image
+                                    src={photo.image_url}
+                                    alt={photo.title}
+                                    fill
+                                    unoptimized
+                                    className="object-cover transition-transform duration-500 group-hover:scale-105"
+                                />
+                                <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                                    <Button variant="secondary" size="icon" className="h-10 w-10 rounded-full bg-white/90 hover:bg-white text-foreground shadow-sm">
+                                        <Edit2 className="h-4 w-4" />
+                                    </Button>
+                                    <Button
+                                        variant="destructive"
+                                        size="icon"
+                                        className="h-10 w-10 rounded-full shadow-sm"
+                                        onClick={() => handleDelete(photo.id)}
+                                    >
+                                        <Trash2 className="h-4 w-4" />
+                                    </Button>
                                 </div>
                             </div>
-                        </CardHeader>
-                        <CardFooter className="p-4 pt-0 text-[11px] text-muted-foreground flex items-center justify-between border-t border-border/10 mt-2 pt-3">
-                            <span>Uploaded on {photo.date}</span>
-                        </CardFooter>
-                    </Card>
-                ))}
-            </div>
+                            <CardHeader className="p-4">
+                                <div className="flex justify-between items-start gap-2">
+                                    <div>
+                                        <CardTitle className="text-sm font-bold line-clamp-1">{photo.title}</CardTitle>
+                                        <CardDescription className="text-[11px] font-medium mt-1 uppercase tracking-wider text-primary">
+                                            {t(`category_${photo.category}`)}
+                                        </CardDescription>
+                                    </div>
+                                </div>
+                            </CardHeader>
+                            <CardFooter className="p-4 pt-0 text-[11px] text-muted-foreground flex items-center justify-between border-t border-border/10 mt-2 pt-3">
+                                <span>Uploaded on {new Date(photo.created_at).toLocaleDateString()}</span>
+                            </CardFooter>
+                        </Card>
+                    ))}
+                </div>
+            )}
         </div>
     )
 }

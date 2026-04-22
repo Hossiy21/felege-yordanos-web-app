@@ -29,7 +29,7 @@ func InitDB() {
 	}
 
 	fmt.Println("Running Database Migrations ...")
-	err = DB.AutoMigrate(&models.User{})
+	err = DB.AutoMigrate(&models.User{}, &models.AuditLog{}, &models.RefreshToken{})
 	if err != nil {
 		log.Fatal("Migration Failed:", err)
 	}

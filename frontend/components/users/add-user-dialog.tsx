@@ -32,14 +32,16 @@ export function AddUserDialog({
     const [open, setOpen] = useState(false)
     const [name, setName] = useState("")
     const [email, setEmail] = useState("")
-    const [role, setRole] = useState("")
-    const [department, setDepartment] = useState("")
+    const [password, setPassword] = useState("")
+    const [role, setRole] = useState("user")
+    const [department, setDepartment] = useState("news")
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault()
         onAddUser({
             name,
             email,
+            password,
             role,
             department,
         })
@@ -50,8 +52,9 @@ export function AddUserDialog({
     const resetForm = () => {
         setName("")
         setEmail("")
-        setRole("")
-        setDepartment("")
+        setPassword("")
+        setRole("user")
+        setDepartment("news")
     }
 
     return (
@@ -63,7 +66,7 @@ export function AddUserDialog({
                 <DialogHeader>
                     <DialogTitle>Add New User</DialogTitle>
                     <DialogDescription>
-                        Create a new user account and assign a role.
+                        Create a new user account and assign a department.
                     </DialogDescription>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="grid gap-4 py-4">
@@ -93,38 +96,45 @@ export function AddUserDialog({
                         />
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
+                        <Label htmlFor="password" className="text-right">
+                            Password
+                        </Label>
+                        <Input
+                            id="password"
+                            type="password"
+                            value={password}
+                            onChange={(e) => setPassword(e.target.value)}
+                            className="col-span-3"
+                            required
+                        />
+                    </div>
+                    <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="role" className="text-right">
                             Role
                         </Label>
-                        <Select onValueChange={setRole} required>
+                        <Select onValueChange={setRole} defaultValue="user" required>
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder="Select role" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Admin">Admin</SelectItem>
-                                <SelectItem value="Management">Management</SelectItem>
-                                <SelectItem value="Approver">Approver</SelectItem>
-                                <SelectItem value="Executive">Executive</SelectItem>
-                                <SelectItem value="Audit">Audit</SelectItem>
-                                <SelectItem value="Staff">Staff</SelectItem>
+                                <SelectItem value="user">User</SelectItem>
+                                <SelectItem value="admin">Admin</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
                     <div className="grid grid-cols-4 items-center gap-4">
                         <Label htmlFor="department" className="text-right">
-                            Department
+                            Dept
                         </Label>
-                        <Select onValueChange={setDepartment} required>
+                        <Select onValueChange={setDepartment} defaultValue="news" required>
                             <SelectTrigger className="col-span-3">
                                 <SelectValue placeholder="Select department" />
                             </SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="Administration">Administration</SelectItem>
-                                <SelectItem value="Finance">Finance</SelectItem>
-                                <SelectItem value="Education">Education</SelectItem>
-                                <SelectItem value="Youth Ministry">Youth Ministry</SelectItem>
-                                <SelectItem value="Choir">Choir</SelectItem>
-                                <SelectItem value="IT">IT</SelectItem>
+                                <SelectItem value="news">News</SelectItem>
+                                <SelectItem value="graphics">Graphics</SelectItem>
+                                <SelectItem value="letters">Letters</SelectItem>
+                                <SelectItem value="none">None</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

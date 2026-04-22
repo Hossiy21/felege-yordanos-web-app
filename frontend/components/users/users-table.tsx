@@ -22,6 +22,7 @@ export interface User {
   status: "Active" | "Inactive"
   lastLogin?: string
   initials?: string
+  password?: string
 }
 
 function getRoleColor(role: string) {
@@ -153,14 +154,14 @@ export function UsersTable({ users }: { users: User[] }) {
                       <div className="flex items-center gap-1.5">
                         <span
                           className={`h-2 w-2 rounded-full ${user.status === "Active"
-                              ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
-                              : "bg-gray-400"
+                            ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]"
+                            : "bg-gray-400"
                             }`}
                         />
                         <span
                           className={`text-sm font-medium ${user.status === "Active"
-                              ? "text-emerald-600 dark:text-emerald-500"
-                              : "text-muted-foreground"
+                            ? "text-emerald-600 dark:text-emerald-500"
+                            : "text-muted-foreground"
                             }`}
                         >
                           {user.status}

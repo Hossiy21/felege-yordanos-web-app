@@ -6,8 +6,8 @@ import (
 
 	"church-platform/meeting-service/internal/database"
 	"church-platform/meeting-service/internal/handlers"
+	"church-platform/meeting-service/internal/middleware"
 
-	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 )
@@ -17,17 +17,17 @@ func main() {
 	database.InitMongo()
 
 	r := gin.Default()
-	r.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:3000"},
-		AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:     []string{"Origin", "Content-Type", "Accept", "Authorization"},
-		ExposeHeaders:    []string{"Content-Length"},
-		AllowCredentials: true,
-	}))
+
+	r.GET("/health", func(c *gin.Context) {
+		c.JSON(200, gin.H{"status": "Meeting service is healthy"})
+	})
+
+	r.Use(middleware.AuthMiddleware())
 
 	r.GET("/meetings", handlers.GetMeetingsHandler)
 	r.POST("/meetings", handlers.CreateMeetingHandler)
 	r.PUT("/meetings/:id", handlers.UpdateMeetingHandler)
+	r.DELETE("/meetings/:id", handlers.DeleteMeetingHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {

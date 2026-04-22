@@ -10,6 +10,12 @@ export interface User {
   email: string
   role: string
   department: string
+  tenantId: string
+  authDetails?: {
+    role: string
+    department: string
+    tenant_id: string
+  }
 }
 
 interface AuthContextType {
@@ -52,8 +58,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             id: backendUser.id || backendUser.email,
             fullName: backendUser.name || backendUser.email,
             email: backendUser.email,
-            role: backendUser.role || "staff",
-            department: "",
+            role: backendUser.role || "user",
+            department: backendUser.department || "",
+            tenantId: backendUser.tenant_id || "",
+            authDetails: {
+              role: backendUser.role || "user",
+              department: backendUser.department || "",
+              tenant_id: backendUser.tenant_id || "",
+            },
           }
           setUser(userData)
         } else {
@@ -94,12 +106,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         }
 
         const backendUser = data.user
+        const authDetails = data.auth_details
         const userData: User = {
           id: backendUser.id || email,
           fullName: backendUser.name || email,
           email: backendUser.email || email,
-          role: backendUser.role || "staff",
-          department: "",
+          role: backendUser.role || "user",
+          department: backendUser.department || "",
+          tenantId: backendUser.tenant_id || "",
+          authDetails: authDetails,
         }
 
         setUser(userData)
@@ -147,8 +162,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           id: backendUser.id || email,
           fullName: backendUser.name || fullName,
           email: backendUser.email || email,
-          role: backendUser.role || "staff",
-          department: "",
+          role: backendUser.role || "user",
+          department: backendUser.department || "",
+          tenantId: backendUser.tenant_id || "",
         }
 
         setUser(userData)

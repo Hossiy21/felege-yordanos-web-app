@@ -17,12 +17,15 @@ import {
   Image as ImageIcon,
 } from "lucide-react"
 import { cn } from "@/lib/utils"
+import { useAuth } from "@/lib/auth-context"
+import { Shield } from "lucide-react"
 import { useState } from "react"
 
 export function AppSidebar() {
   const pathname = usePathname()
   const [collapsed, setCollapsed] = useState(false)
   const { t } = useTranslation()
+  const { user } = useAuth()
 
   const navSections = [
     {
@@ -33,6 +36,7 @@ export function AppSidebar() {
     },
     {
       label: t("letter_management"),
+      dept: "letters",
       items: [
         { name: t("incoming"), href: "/letters/incoming", icon: Mail },
         { name: t("outgoing"), href: "/letters/outgoing", icon: Send },
@@ -43,19 +47,43 @@ export function AppSidebar() {
       items: [
         { name: t("meetings"), href: "/meetings", icon: CalendarDays },
         { name: t("documents"), href: "/documents", icon: FileText },
-        { name: t("news_management"), href: "/news-management", icon: Newspaper },
-        { name: t("gallery_management"), href: "/gallery-management", icon: ImageIcon },
+        { name: t("news_management"), href: "/news-management", icon: Newspaper, dept: "news" },
+        { name: t("gallery_management"), href: "/gallery-management", icon: ImageIcon, dept: "graphics" },
       ],
     },
     {
       label: t("administration"),
       items: [
-        { name: t("audit_logs"), href: "/audit", icon: ClipboardList },
-        { name: t("user_management"), href: "/users", icon: Users },
+        { name: t("audit_logs"), href: "/audit", icon: ClipboardList, role: "admin" },
+        { name: t("user_management"), href: "/users", icon: Users, role: "admin" },
+        { name: t("security"), href: "/security", icon: Shield, role: "admin" },
         { name: t("settings"), href: "/settings", icon: Settings },
       ],
     },
   ]
+
+  const filteredSections = navSections
+    .map((section) => ({
+      ...section,
+      items: section.items.filter((item: any) => {
+        // Use authDetails if available, otherwise fallback to user properties
+        const userRole = user?.authDetails?.role || user?.role
+        const userDept = user?.authDetails?.department || user?.department
+
+        // If user is admin, they see everything
+        if (userRole === "admin") return true
+
+        // Check role requirement
+        if (item.role && item.role !== userRole) return false
+
+        // Check department requirement (for section or item)
+        const itemDept = item.dept || (section as any).dept
+        if (itemDept && itemDept !== userDept) return false
+
+        return true
+      }),
+    }))
+    .filter((section) => section.items.length > 0)
 
   return (
     <aside
@@ -83,7 +111,7 @@ export function AppSidebar() {
 
       {/* Navigation */}
       <nav className="flex-1 overflow-y-auto py-4 px-2">
-        {navSections.map((section) => (
+        {filteredSections.map((section) => (
           <div key={section.label} className="mb-4">
             {!collapsed && (
               <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted">

@@ -12,9 +12,11 @@ import {
   CheckCircle2,
   AlertCircle,
   TrendingUp,
-  MessageSquare
+  MessageSquare,
+  Search
 } from "lucide-react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { useTranslation } from "react-i18next"
 import { useEffect, useCallback } from "react"
 import { toast } from "sonner"
@@ -24,12 +26,25 @@ export default function MeetingsPage() {
   const [meetings, setMeetings] = useState<Meeting[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [stats, setStats] = useState({ upcoming: 0, total_decisions: 0, emergencies: 0 })
 
-  const fetchMeetings = useCallback(async () => {
+  // Pagination State
+  const [currentPage, setCurrentPage] = useState(1)
+  const [totalPages, setTotalPages] = useState(1)
+  const [pageSize, setPageSize] = useState(5)
+  const [totalItems, setTotalItems] = useState(0)
+  const [statusFilter, setStatusFilter] = useState("")
+  const [searchTerm, setSearchTerm] = useState("")
+
+  const fetchMeetings = useCallback(async (page: number = 1, limit: number = 5, status: string = "", search: string = "") => {
     setIsLoading(true)
     setError(null)
     try {
-      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/meeting/meetings`, {
+      let url = `${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/meeting/meetings?page=${page}&limit=${limit}`
+      if (status) url += `&status=${status}`
+      if (search) url += `&search=${encodeURIComponent(search)}`
+
+      const response = await fetch(url, {
         credentials: "include",
       })
 
@@ -38,8 +53,18 @@ export default function MeetingsPage() {
       }
 
       const data = await response.json()
-      // Map 'id' properly if needed (backend returns 'id')
-      setMeetings(data)
+
+      if (data.meetings) {
+        setMeetings(data.meetings)
+        setTotalPages(data.pages || 1)
+        setTotalItems(data.total || 0)
+        setCurrentPage(data.page || 1)
+        if (data.stats) {
+          setStats(data.stats)
+        }
+      } else {
+        setMeetings(Array.isArray(data) ? data : [])
+      }
     } catch (err) {
       console.error("Fetch failed:", err)
       setError("Unable to load meeting records.")
@@ -49,8 +74,29 @@ export default function MeetingsPage() {
   }, [])
 
   useEffect(() => {
-    fetchMeetings()
-  }, [fetchMeetings])
+    const timer = setTimeout(() => {
+      fetchMeetings(currentPage, pageSize, statusFilter, searchTerm)
+    }, 500)
+    return () => clearTimeout(timer)
+  }, [currentPage, pageSize, statusFilter, searchTerm, fetchMeetings])
+
+  const handleUpdateMeeting = async (id: string, updateData: any) => {
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/meeting/meetings/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updateData),
+        credentials: "include",
+      })
+
+      if (!response.ok) throw new Error("Update failed")
+
+      toast.success("Meeting updated successfully")
+      fetchMeetings(currentPage, pageSize, statusFilter, searchTerm)
+    } catch (err) {
+      toast.error("Failed to update meeting")
+    }
+  }
 
   const handleCreateMeeting = async (newMeetingData: any) => {
     try {
@@ -90,9 +136,23 @@ export default function MeetingsPage() {
   }
 
   // Calculate stats
-  const upcomingCount = meetings.filter(m => m.status === "Upcoming").length
-  const totalDecisions = meetings.reduce((acc, m) => acc + (m.decisions || 0), 0)
-  const emergencyCount = meetings.filter(m => m.isEmergency).length
+  const handleDeleteMeeting = async (id: string) => {
+    if (!confirm("Are you sure you want to delete this meeting?")) return
+
+    try {
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL || "http://localhost:8000"}/api/meeting/meetings/${id}`, {
+        method: "DELETE",
+        credentials: "include",
+      })
+
+      if (!response.ok) throw new Error("Delete failed")
+
+      toast.success("Meeting moved to trash")
+      fetchMeetings(currentPage, pageSize)
+    } catch (err) {
+      toast.error("Failed to delete meeting")
+    }
+  }
 
   return (
     <div className="flex flex-col gap-8 pb-10">
@@ -126,7 +186,7 @@ export default function MeetingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Upcoming</p>
-                <h3 className="text-3xl font-bold mt-1">{upcomingCount}</h3>
+                <h3 className="text-3xl font-bold mt-1">{stats.upcoming}</h3>
               </div>
               <div className="h-12 w-12 rounded-2xl bg-blue-500/10 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
                 <Clock className="h-6 w-6" />
@@ -144,7 +204,7 @@ export default function MeetingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Total Decisions</p>
-                <h3 className="text-3xl font-bold mt-1">{totalDecisions}</h3>
+                <h3 className="text-3xl font-bold mt-1">{stats.total_decisions}</h3>
               </div>
               <div className="h-12 w-12 rounded-2xl bg-emerald-500/10 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
                 <CheckCircle2 className="h-6 w-6" />
@@ -162,7 +222,7 @@ export default function MeetingsPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Emergency Sessions</p>
-                <h3 className="text-3xl font-bold mt-1">{emergencyCount}</h3>
+                <h3 className="text-3xl font-bold mt-1">{stats.emergencies}</h3>
               </div>
               <div className="h-12 w-12 rounded-2xl bg-red-500/10 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
                 <AlertCircle className="h-6 w-6" />
@@ -177,12 +237,37 @@ export default function MeetingsPage() {
       </div>
 
       <div className="space-y-4">
-        <div className="flex items-center justify-between px-1">
-          <h2 className="text-xl font-bold text-foreground">Timeline</h2>
-          <div className="flex gap-2">
-            <Button variant="ghost" size="sm" className="text-xs h-8">All</Button>
-            <Button variant="ghost" size="sm" className="text-xs h-8">Scheduled</Button>
-            <Button variant="ghost" size="sm" className="text-xs h-8">History</Button>
+        <div className="flex flex-col sm:flex-row items-center justify-between px-1 gap-4">
+          <div className="relative w-full sm:w-64">
+            <Input
+              placeholder="Search meetings..."
+              value={searchTerm}
+              onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="pl-9 h-9 bg-background/50 border-border/40 focus:border-primary/50"
+            />
+            <div className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8" /><path d="m21 21-4.3-4.3" /></svg>
+            </div>
+          </div>
+          <div className="flex gap-2 self-end sm:self-auto">
+            <Button
+              variant={statusFilter === "" ? "default" : "ghost"}
+              size="sm"
+              className="text-xs h-8"
+              onClick={() => { setStatusFilter(""); setCurrentPage(1); }}
+            >All</Button>
+            <Button
+              variant={statusFilter === "Upcoming" ? "default" : "ghost"}
+              size="sm"
+              className="text-xs h-8"
+              onClick={() => { setStatusFilter("Upcoming"); setCurrentPage(1); }}
+            >Scheduled</Button>
+            <Button
+              variant={statusFilter === "Completed" ? "default" : "ghost"}
+              size="sm"
+              className="text-xs h-8"
+              onClick={() => { setStatusFilter("Completed"); setCurrentPage(1); }}
+            >History</Button>
           </div>
         </div>
 
@@ -203,7 +288,40 @@ export default function MeetingsPage() {
             </Button>
           </div>
         ) : (
-          <MeetingsList meetings={meetings} />
+          <div className="space-y-6">
+            <MeetingsList
+              meetings={meetings}
+              onDelete={handleDeleteMeeting}
+              onUpdate={handleUpdateMeeting}
+            />
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between px-2 py-4 border-t border-border/40">
+                <p className="text-sm text-muted-foreground">
+                  Showing {meetings.length > 0 ? (currentPage - 1) * pageSize + 1 : 0} to{" "}
+                  {Math.min(currentPage * pageSize, totalItems)} of {totalItems} meetings
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === 1}
+                    onClick={() => setCurrentPage(prev => prev - 1)}
+                  >
+                    Previous
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    disabled={currentPage === totalPages}
+                    onClick={() => setCurrentPage(prev => prev + 1)}
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
