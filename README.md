@@ -105,19 +105,54 @@ A comprehensive, full-stack web application for managing the Sunday School opera
 ---
 *Stay tuned for more updates as we build the future of church digital administration.*
 
-### Frontend
-- **Framework**: Next.js 15 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: Radix UI (shadcn/ui)
-- **State Management**: React Context + Custom Hooks
-- **Internationalization**: i18next
-- **Forms**: React Hook Form + Zod validation
-- **Notifications**: Sonner
-- **PDF Generation**: html2pdf.js
+## 🏗 Architecture
+The platform is built on a **Microservices Architecture** to ensure scalability and high availability:
+- **API Gateway**: The single entry point that handles Authentication, RBAC, and Request Proxying.
+- **Auth Service**: Manages users, sessions, and security tokens.
+- **Document Service**: Handles church archives and digital asset metadata (Go + MongoDB).
+- **Letter Service**: Manages incoming/outgoing church correspondence and PDF generation.
+- **News Service**: Public-facing news and events management.
+- **Storage Gateway**: Secure proxy to MinIO S3 storage.
 
-### DevOps
-- **Containerization**: Docker & Docker Compose
+## 🚀 Getting Started
+
+### Prerequisites
+- [Go](https://go.dev/) (v1.21+)
+- [Node.js](https://nodejs.org/) (v18+)
+- [MongoDB](https://www.mongodb.com/)
+- [MinIO](https://min.io/) (Object Storage)
+
+### 1. Environment Setup
+Each service has a `.env.example` file. You must create a `.env` file in each service directory:
+
+```bash
+# Example for Document Service
+cp backend/services/document-service/.env.example backend/services/document-service/.env
+```
+
+### 2. Database & Storage
+- Ensure **MongoDB** is running on `127.0.0.1:27017`.
+- Ensure **MinIO** is running on `127.0.0.1:9000` and create a bucket named `church-documents`.
+
+### 3. Run the Services
+Open separate terminals for each service:
+
+```bash
+# Start Gateway
+cd backend/services/gateway-service && go run cmd/main.go
+
+# Start Document Service
+cd backend/services/document-service && go run cmd/main.go
+
+# Start Frontend
+cd frontend && npm run dev
+```
+
+## 🛠 Tech Stack
+- **Frontend**: Next.js 15 (App Router), Tailwind CSS, Shadcn/UI
+- **Backend**: Go (Gin Gonic)
+- **Database**: MongoDB (Metadata), PostgreSQL (HR)
+- **Storage**: MinIO (S3-Compatible)
 - **Environment**: .env configuration
 - **Development**: Hot reload, Turbo mode
 
@@ -230,31 +265,13 @@ church-management-system/
 
 ### 1. Environment Setup
 
-Create a `.env` file in the `backend/` directory:
+For local development, you must set up environment variables for each service. Refer to the `.env.example` files provided in each service directory for the required keys.
 
-```env
-# Database Configuration
-DB_USER=postgres
-DB_PASSWORD=mypassword123
-DB_HOST=localhost
-DB_PORT=5432
-DB_NAME=church_management_db
-
-# JWT Configuration
-JWT_SECRET=your_super_secret_key_here
-
-# MinIO Configuration
-MINIO_ROOT_USER=minioadmin
-MINIO_ROOT_PASSWORD=minioadmin123
-
-# Service Ports
-PORT=8080
-NEWS_PORT=8081
-LETTERS_PORT=8082
-MEETINGS_PORT=8083
-
-# Gin Mode
-GIN_MODE=debug
+```bash
+# Example: Setting up the Document Service
+cd backend/services/document-service
+cp .env.example .env
+# Then edit .env with your local credentials
 ```
 
 ### 2. Start the Backend Services
