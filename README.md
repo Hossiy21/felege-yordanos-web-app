@@ -134,19 +134,23 @@ cp backend/services/document-service/.env.example backend/services/document-serv
 - Ensure **MongoDB** is running on `127.0.0.1:27017`.
 - Ensure **MinIO** is running on `127.0.0.1:9000` and create a bucket named `church-documents`.
 
-### 3. Run the Services
-Open separate terminals for each service:
+### 3. Run the Services (One-Click Start ⚡)
+For the best development experience on Windows, we've provided an automated script that opens all services in separate tabs using Windows Terminal:
 
 ```bash
-# Start Gateway
-cd backend/services/gateway-service && go run cmd/main.go
-
-# Start Document Service
-cd backend/services/document-service && go run cmd/main.go
-
-# Start Frontend
-cd frontend && npm run dev
+# Navigate to services directory and run the automation script
+cd backend/services
+./AutoRun.bat
 ```
+
+This will automatically launch:
+1.  **Auth Service** (Port 8080) - Identity & User Management
+2.  **Gateway Service** (Port 8000) - API Routing & JWT Validation
+3.  **Document Service** (Port 8084) - Archive & S3 File Metadata
+4.  **Letter Service** (Port 8082) - Church Correspondence & PDF Logic
+5.  **Meeting Service** (Port 8083) - Minutes & Schedule Management
+6.  **News Service** (Port 8085) - Public Content Management
+7.  **Frontend** (Port 3000) - Next.js 15 Web Interface
 
 ## 🛠 Tech Stack
 - **Frontend**: Next.js 15 (App Router), Tailwind CSS, Shadcn/UI
