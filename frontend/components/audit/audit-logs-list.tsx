@@ -1,7 +1,7 @@
 "use client"
 
-import { useState } from "react"
-import { Search, FileText, CheckSquare, Upload, LogIn } from "lucide-react"
+import { useState, useEffect } from "react"
+import { Search, FileText, CheckSquare, Upload, LogIn, AlertCircle, Loader2, Shield } from "lucide-react"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -12,83 +12,43 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-const logs = [
-  {
-    user: "Abebe T.",
-    action: "Created letter",
-    target: "SST/EDU/001/2026",
-    timestamp: "Feb 8, 2026 14:32:05",
-    ip: "192.168.1.12",
-    category: "Letter",
-    icon: FileText,
-  },
-  {
-    user: "Sara M.",
-    action: "Submitted for approval",
-    target: "SST/FIN/003/2026",
-    timestamp: "Feb 7, 2026 11:15:22",
-    ip: "192.168.1.15",
-    category: "Workflow",
-    icon: CheckSquare,
-  },
-  {
-    user: "Admin User",
-    action: "Approved letter",
-    target: "SST/EDU/001/2026",
-    timestamp: "Feb 8, 2026 16:45:10",
-    ip: "192.168.1.10",
-    category: "Workflow",
-    icon: CheckSquare,
-  },
-  {
-    user: "Daniel K.",
-    action: "Uploaded attachment",
-    target: "SST/ADM/012/2026",
-    timestamp: "Feb 6, 2026 09:20:33",
-    ip: "192.168.1.18",
-    category: "Document",
-    icon: Upload,
-  },
-  {
-    user: "Admin User",
-    action: "User login",
-    target: "System",
-    timestamp: "Feb 8, 2026 08:00:01",
-    ip: "192.168.1.10",
-    category: "Auth",
-    icon: LogIn,
-  },
-  {
-    user: "Helen G.",
-    action: "Updated meeting minutes",
-    target: "Weekly Meeting - Feb 4",
-    timestamp: "Feb 5, 2026 10:12:44",
-    ip: "192.168.1.20",
-    category: "Meeting",
-    icon: FileText,
-  },
-  {
-    user: "Sara M.",
-    action: "Rejected letter",
-    target: "SST/FIN/004/2026",
-    timestamp: "Feb 4, 2026 15:30:11",
-    ip: "192.168.1.15",
-    category: "Workflow",
-    icon: CheckSquare,
-  },
-]
+interface AuditLog {
+  id: string
+  admin_email: string
+  action: string
+  timestamp: string
+  ip_address: string
+}
+
+function getIconForAction(action: string) {
+  const a = action.toLowerCase()
+  if (a.includes("login")) return LogIn
+  if (a.includes("upload") || a.includes("document")) return Upload
+  if (a.includes("letter")) return FileText
+  if (a.includes("permission") || a.includes("user")) return Shield
+  return CheckSquare
+}
+
+function getCategoryFromAction(action: string) {
+  const a = action.toLowerCase()
+  if (a.includes("login")) return "Auth"
+  if (a.includes("document") || a.includes("upload")) return "Document"
+  if (a.includes("letter")) return "Letter"
+  if (a.includes("permission") || a.includes("user")) return "Security"
+  return "System"
+}
 
 function getCategoryColor(category: string) {
   switch (category) {
     case "Letter":
       return "bg-blue-50 text-blue-700 border-blue-200"
-    case "Workflow":
+    case "Security":
       return "bg-amber-50 text-amber-700 border-amber-200"
     case "Document":
       return "bg-emerald-50 text-emerald-700 border-emerald-200"
     case "Auth":
       return "bg-slate-50 text-slate-600 border-slate-200"
-    case "Meeting":
+    case "System":
       return "bg-teal-50 text-teal-700 border-teal-200"
     default:
       return "bg-gray-50 text-gray-500 border-gray-200"
@@ -96,57 +56,87 @@ function getCategoryColor(category: string) {
 }
 
 export function AuditLogsList() {
+  const [logs, setLogs] = useState<AuditLog[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
   const [search, setSearch] = useState("")
-  const [category, setCategory] = useState("all")
-  const [user, setUser] = useState("all")
+  const [categoryFilter, setCategoryFilter] = useState("all")
+
+  useEffect(() => {
+    fetchLogs()
+  }, [])
+
+  const fetchLogs = async () => {
+    try {
+      setLoading(true)
+      const response = await fetch(`${process.env.NEXT_PUBLIC_API_BASE_URL}/api/auth/admin/audit-logs`, {
+        credentials: 'include'
+      })
+      if (!response.ok) throw new Error("Failed to fetch real audit logs")
+      const data = await response.json()
+      setLogs(data || [])
+    } catch (err: any) {
+      setError(err.message)
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const filtered = logs.filter((log) => {
+    const category = getCategoryFromAction(log.action)
     const matchSearch =
       log.action.toLowerCase().includes(search.toLowerCase()) ||
-      log.target.toLowerCase().includes(search.toLowerCase()) ||
-      log.user.toLowerCase().includes(search.toLowerCase())
-    const matchCategory = category === "all" || log.category === category
-    const matchUser = user === "all" || log.user === user
-    return matchSearch && matchCategory && matchUser
+      log.admin_email.toLowerCase().includes(search.toLowerCase())
+    const matchCategory = categoryFilter === "all" || category === categoryFilter
+    return matchSearch && matchCategory
   })
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 bg-card border rounded-lg">
+        <Loader2 className="h-10 w-10 text-primary animate-spin mb-4" />
+        <p className="text-muted-foreground">Fetching real audit trail...</p>
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex flex-col items-center justify-center py-20 bg-card border border-destructive/20 rounded-lg">
+        <AlertCircle className="h-10 w-10 text-destructive mb-4" />
+        <h3 className="text-lg font-semibold">Error Loading Logs</h3>
+        <p className="text-muted-foreground mt-1">{error}</p>
+        <button onClick={fetchLogs} className="mt-4 text-sm text-primary hover:underline font-medium">
+          Try Again
+        </button>
+      </div>
+    )
+  }
 
   return (
     <div className="flex flex-col gap-4">
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 p-4 bg-card border border-border rounded-lg">
+      <div className="flex flex-wrap items-center gap-3 p-4 bg-card border border-border rounded-lg shadow-sm">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
           <Input
-            placeholder="Search actions, users, targets..."
+            placeholder="Search actions or admin emails..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
           />
         </div>
-        <Select value={category} onValueChange={setCategory}>
+        <Select value={categoryFilter} onValueChange={setCategoryFilter}>
           <SelectTrigger className="w-[140px]">
             <SelectValue placeholder="Category" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">Category</SelectItem>
-            <SelectItem value="Letter">Letter</SelectItem>
-            <SelectItem value="Workflow">Workflow</SelectItem>
-            <SelectItem value="Document">Document</SelectItem>
+            <SelectItem value="all">All Categories</SelectItem>
             <SelectItem value="Auth">Auth</SelectItem>
-            <SelectItem value="Meeting">Meeting</SelectItem>
-          </SelectContent>
-        </Select>
-        <Select value={user} onValueChange={setUser}>
-          <SelectTrigger className="w-[140px]">
-            <SelectValue placeholder="User" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">User</SelectItem>
-            <SelectItem value="Admin User">Admin User</SelectItem>
-            <SelectItem value="Abebe T.">Abebe T.</SelectItem>
-            <SelectItem value="Sara M.">Sara M.</SelectItem>
-            <SelectItem value="Daniel K.">Daniel K.</SelectItem>
-            <SelectItem value="Helen G.">Helen G.</SelectItem>
+            <SelectItem value="Document">Document</SelectItem>
+            <SelectItem value="Letter">Letter</SelectItem>
+            <SelectItem value="Security">Security</SelectItem>
+            <SelectItem value="System">System</SelectItem>
           </SelectContent>
         </Select>
         <Input type="date" className="w-[160px]" aria-label="Start date" />
@@ -154,37 +144,45 @@ export function AuditLogsList() {
       </div>
 
       {/* Logs */}
-      <div className="flex flex-col gap-0 bg-card border border-border rounded-lg divide-y divide-border">
-        {filtered.map((log, index) => (
-          <div
-            key={`${log.user}-${log.timestamp}-${index}`}
-            className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
-          >
-            <div className="flex items-center gap-4">
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
-                <log.icon className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <div className="flex flex-col gap-0.5">
-                <p className="text-sm text-foreground">
-                  <span className="font-semibold text-info">{log.user}</span>{" "}
-                  <span className="text-muted-foreground">{log.action}</span>{" "}
-                  <span className="font-mono text-xs bg-muted px-1.5 py-0.5 rounded text-foreground">
-                    {log.target}
-                  </span>
-                </p>
-                <p className="text-xs text-muted-foreground">
-                  {log.timestamp} &middot; IP: {log.ip}
-                </p>
-              </div>
-            </div>
-            <Badge
-              variant="outline"
-              className={`text-xs shrink-0 ${getCategoryColor(log.category)}`}
-            >
-              {log.category}
-            </Badge>
+      <div className="flex flex-col gap-0 bg-card border border-border rounded-lg divide-y divide-border shadow-sm overflow-hidden">
+        {filtered.length === 0 ? (
+          <div className="py-20 text-center">
+            <Shield className="h-12 w-12 text-muted-foreground/30 mx-auto mb-4" />
+            <p className="text-muted-foreground">No audit logs found for this criteria.</p>
           </div>
-        ))}
+        ) : (
+          filtered.map((log) => {
+            const Icon = getIconForAction(log.action)
+            const category = getCategoryFromAction(log.action)
+            return (
+              <div
+                key={log.id}
+                className="flex items-center justify-between px-5 py-4 hover:bg-muted/30 transition-colors"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-muted">
+                    <Icon className="h-4 w-4 text-muted-foreground" />
+                  </div>
+                  <div className="flex flex-col gap-0.5">
+                    <p className="text-sm text-foreground">
+                      <span className="font-semibold text-primary">{log.admin_email}</span>{" "}
+                      <span className="text-muted-foreground">{log.action}</span>
+                    </p>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(log.timestamp).toLocaleString()} &middot; IP: {log.ip_address}
+                    </p>
+                  </div>
+                </div>
+                <Badge
+                  variant="outline"
+                  className={`text-xs shrink-0 ${getCategoryColor(category)}`}
+                >
+                  {category}
+                </Badge>
+              </div>
+            )
+          })
+        )}
       </div>
     </div>
   )

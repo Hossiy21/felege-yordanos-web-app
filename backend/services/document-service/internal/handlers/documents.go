@@ -35,6 +35,7 @@ func UploadDocument(c *gin.Context) {
 
 	description := c.PostForm("description")
 	title := c.PostForm("title")
+	category := c.PostForm("category")
 	docDateStr := c.PostForm("document_date")
 	
 	docDate := time.Now()
@@ -98,6 +99,7 @@ func UploadDocument(c *gin.Context) {
 		OwnerEmail:   ownerEmail,
 		TenantID:     tenantID,
 		Description:  description,
+		Category:     category,
 		DocumentDate: docDate,
 		CreatedAt:    time.Now(),
 	}
@@ -111,6 +113,7 @@ func UploadDocument(c *gin.Context) {
 	}
 
 	log.Printf("Upload successful: %s", title)
+	utils.RecordAudit(ownerEmail, fmt.Sprintf("Uploaded document: %s", title))
 	c.JSON(http.StatusCreated, gin.H{"message": "Document uploaded successfully", "document": newDoc})
 }
 
@@ -168,6 +171,8 @@ func DeleteDocument(c *gin.Context) {
 		return
 	}
 
+	email, _ := c.Get("user_email")
+	utils.RecordAudit(fmt.Sprintf("%v", email), fmt.Sprintf("Deleted document: %s", doc.Title))
 	c.JSON(http.StatusOK, gin.H{"message": "Document deleted successfully"})
 }
 
@@ -180,6 +185,7 @@ func UpdateDocument(c *gin.Context) {
 	var input struct {
 		Title        string `json:"title"`
 		Description  string `json:"description"`
+		Category     string `json:"category"`
 		DocumentDate string `json:"document_date"`
 	}
 
@@ -194,6 +200,9 @@ func UpdateDocument(c *gin.Context) {
 	}
 	if input.Description != "" {
 		update["description"] = input.Description
+	}
+	if input.Category != "" {
+		update["category"] = input.Category
 	}
 	if input.DocumentDate != "" {
 		if parsed, err := time.Parse("2006-01-02", input.DocumentDate); err == nil {
@@ -215,6 +224,9 @@ func UpdateDocument(c *gin.Context) {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to update document"})
 		return
 	}
+
+	email, _ := c.Get("user_email")
+	utils.RecordAudit(fmt.Sprintf("%v", email), fmt.Sprintf("Updated document metadata: %s", input.Title))
 
 	c.JSON(http.StatusOK, gin.H{"message": "Document updated successfully"})
 }

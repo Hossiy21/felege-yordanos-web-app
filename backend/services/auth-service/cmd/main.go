@@ -36,12 +36,14 @@ func main() {
 		admin.POST("/create-user", handlers.AdminCreateUser)
 		admin.GET("/users", handlers.SearchUsers)
 		admin.PATCH("/update-user", handlers.UpdateUser)
+		admin.GET("/audit-logs", handlers.GetAuditLogs)
 	}
 
 	r.POST("/login", middleware.LoginLimiter(), handlers.Login)
 	r.POST("/logout", handlers.Logout)
 	r.GET("/me", middleware.AuthGuard(), handlers.GetMe)
 	r.POST("/refresh", handlers.Refresh)
+	r.POST("/internal/audit", handlers.InternalRecordAudit)
 
 	port := os.Getenv("PORT")
 	if port == "" {

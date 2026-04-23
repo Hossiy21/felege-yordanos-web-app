@@ -16,6 +16,7 @@ type Document struct {
 	OwnerEmail   string             `bson:"owner_email" json:"owner_email"`
 	TenantID     string             `bson:"tenant_id" json:"tenant_id"`
 	Description  string             `bson:"description" json:"description"`
+	Category     string             `bson:"category" json:"category"`
 	DocumentDate time.Time          `bson:"document_date" json:"document_date"`
 	CreatedAt    time.Time          `bson:"created_at" json:"created_at"`
 }

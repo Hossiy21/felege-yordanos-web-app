@@ -54,6 +54,8 @@ func AdminCreateUser(c *gin.Context) {
 		return
 	}
 	newUser.Password = ""
+	adminEmail, _ := c.Get("user_email")
+	RecordAudit(c, fmt.Sprintf("%v", adminEmail), fmt.Sprintf("Created new user: %s", newUser.Email))
 	c.JSON(http.StatusCreated, newUser)
 }
 func Login(c *gin.Context) {
@@ -120,12 +122,14 @@ func Login(c *gin.Context) {
 	}
 	database.DB.Create(&refreshTokenRecord)
 
+	RecordAudit(c, user.Email, "User logged in")
+
 	http.SetCookie(c.Writer, &http.Cookie{
 		Name:     "sst_access_token",
 		Value:    accessToken,
 		MaxAge:   900, // which is 15 min
 		Path:     "/",
-		Secure:   true,
+		Secure:   false, // Set to false for local HTTP development
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -134,7 +138,7 @@ func Login(c *gin.Context) {
 		Value:    refreshTokenValue,
 		MaxAge:   604800, // which is 7 day,
 		Path:     "/auth/refresh",
-		Secure:   true,
+		Secure:   false, // Set to false for local HTTP development
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -157,14 +161,22 @@ func Login(c *gin.Context) {
 }
 
 func Logout(c *gin.Context) {
-	// Clear the HttpOnly cookie
+	// Clear the HttpOnly cookies
 	http.SetCookie(c.Writer, &http.Cookie{
-		Name:     "sst_auth_token",
+		Name:     "sst_access_token",
 		Value:    "",
 		MaxAge:   -1,
 		Path:     "/",
-		Domain:   "",
-		Secure:   true,
+		Secure:   false,
+		HttpOnly: true,
+		SameSite: http.SameSiteLaxMode,
+	})
+	http.SetCookie(c.Writer, &http.Cookie{
+		Name:     "sst_refresh_token",
+		Value:    "",
+		MaxAge:   -1,
+		Path:     "/auth/refresh",
+		Secure:   false,
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
@@ -271,6 +283,54 @@ func UpdateUser(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "User security settings updated successfully"})
 }
 
+func InternalRecordAudit(c *gin.Context) {
+	var input struct {
+		AdminEmail string `json:"admin_email"`
+		Action     string `json:"action"`
+	}
+	if err := c.ShouldBindJSON(&input); err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": "Invalid audit data"})
+		return
+	}
+
+	audit := models.AuditLog{
+		ID:         uuid.New(),
+		AdminEmail: input.AdminEmail,
+		Action:     input.Action,
+		Timestamp:  time.Now(),
+		IPAddress:  c.ClientIP(),
+	}
+	database.DB.Create(&audit)
+	c.JSON(http.StatusOK, gin.H{"status": "Audit recorded"})
+}
+
+func GetAuditLogs(c *gin.Context) {
+	userRole, _ := c.Get("user_role")
+	if userRole != "admin" {
+		c.JSON(http.StatusForbidden, gin.H{"error": "Only administrators can view audit logs"})
+		return
+	}
+
+	var logs []models.AuditLog
+	if err := database.DB.Order("timestamp desc").Limit(100).Find(&logs).Error; err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Failed to fetch audit logs"})
+		return
+	}
+
+	c.JSON(http.StatusOK, logs)
+}
+
+func RecordAudit(c *gin.Context, adminEmail string, action string) {
+	audit := models.AuditLog{
+		ID:         uuid.New(),
+		AdminEmail: adminEmail,
+		Action:     action,
+		Timestamp:  time.Now(),
+		IPAddress:  c.ClientIP(),
+	}
+	database.DB.Create(&audit)
+}
+
 func Refresh(c *gin.Context) {
 	cookie, err := c.Cookie("sst_refresh_token")
 	if err != nil {
@@ -295,7 +355,7 @@ func Refresh(c *gin.Context) {
 		Value:    newAccessToken,
 		MaxAge:   900, // for 15 min,
 		Path:     "/",
-		Secure:   true,
+		Secure:   false, // Set to false for local dev
 		HttpOnly: true,
 		SameSite: http.SameSiteLaxMode,
 	})
