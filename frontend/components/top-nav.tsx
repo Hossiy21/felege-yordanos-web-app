@@ -17,6 +17,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 export function TopNav() {
   const { user, signOut } = useAuth()
@@ -52,77 +53,80 @@ export function TopNav() {
   else if (hour < 18) greeting = t('greeting_afternoon')
 
   return (
-    <header className="sticky top-0 z-40 flex items-center justify-between h-[4.5rem] px-6 border-b border-border/40 bg-background/80 backdrop-blur-xl supports-[backdrop-filter]:bg-background/60 transition-all duration-200 shadow-sm">
-      <div className="flex-1 flex flex-col justify-center">
-        {mounted ? (
-          <div className="animate-in fade-in slide-in-from-left-2 duration-500">
-            <h2 className="text-[15px] font-bold tracking-tight text-foreground flex items-center gap-2">
-              {greeting}, {user?.fullName?.split(" ")[0] || t("user")} <span className="text-sm"></span>
-            </h2>
-            <div className="flex items-center gap-1.5 mt-0.5 text-muted-foreground">
-              <Calendar className="h-3.5 w-3.5 text-primary/80" />
-              <span className="text-[12px] font-medium">{formattedDate}</span>
+    <header className="sticky top-0 z-40 flex items-center justify-between h-[5rem] px-4 md:px-8 border-b border-border/40 bg-background/95 backdrop-blur-xl supports-[backdrop-filter]:bg-background/70 transition-all duration-300 shadow-sm">
+      <div className="flex items-center gap-4">
+        <SidebarTrigger className="md:hidden h-9 w-9" />
+        <div className="flex flex-col justify-center">
+          {mounted ? (
+            <div className="animate-in fade-in slide-in-from-left-2 duration-700">
+              <h2 className="text-[17px] font-black tracking-tight text-foreground/90 flex items-center gap-2">
+                {greeting}, {user?.fullName?.split(" ")[0] || t("user")}
+              </h2>
+              <div className="flex items-center gap-2 mt-1 text-muted-foreground/70">
+                <Calendar className="h-3.5 w-3.5 text-primary/60" />
+                <span className="text-[11px] font-bold uppercase tracking-wider">{formattedDate}</span>
+              </div>
             </div>
-          </div>
-        ) : (
-          <div className="h-[38px] opacity-0" />
-        )}
+          ) : (
+            <div className="h-[42px] opacity-0" />
+          )}
+        </div>
       </div>
 
       {/* Right side actions */}
-      <div className="flex items-center gap-2 md:gap-4 ml-4">
-        <div className="flex items-center gap-1">
+      <div className="flex items-center gap-1 md:gap-3 ml-4">
+        <div className="flex items-center gap-0.5 md:gap-1">
           <LanguageToggle />
           <ThemeToggle />
 
           {/* Notification Bell */}
           <button
-            className="relative group p-2.5 rounded-full hover:bg-muted/60 transition-all duration-200 border border-transparent hover:border-border/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+            className="relative group p-2.5 rounded-xl hover:bg-muted/80 transition-all duration-200 border border-transparent hover:border-border/30 focus:outline-none focus:ring-2 focus:ring-primary/10"
             aria-label="Notifications"
           >
-            <Bell className="h-[20px] w-[20px] text-muted-foreground group-hover:text-foreground transition-colors" />
-            <span className="absolute top-2 right-2.5 h-2 w-2 rounded-full bg-destructive border-[1.5px] border-background animate-pulse" />
+            <Bell className="h-[20px] w-[20px] text-muted-foreground/80 group-hover:text-foreground transition-colors" />
+            <span className="absolute top-2.5 right-2.5 h-2 w-2 rounded-full bg-[#FF4D4D] border-[2px] border-background" />
           </button>
         </div>
 
-        <div className="h-8 w-px bg-border/50 hidden md:block" />
+        <div className="h-10 w-px bg-border/40 hidden md:block mx-2" />
 
         {/* User Profile */}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-3 rounded-full md:rounded-[1rem] hover:bg-muted/50 p-1.5 pr-3 transition-all duration-200 border border-transparent hover:border-border/60 focus:outline-none focus:ring-[3px] focus:ring-primary/10 group">
-              <Avatar className="h-9 w-9 rounded-full ring-[2px] ring-background shadow-sm transition-transform duration-200 group-hover:scale-105">
-                <AvatarFallback className="bg-primary/10 text-primary text-sm font-bold">
+            <button className="flex items-center gap-3.5 rounded-2xl hover:bg-muted/60 p-1.5 pr-4 transition-all duration-300 border border-transparent hover:border-border/50 focus:outline-none focus:ring-4 focus:ring-primary/5 group">
+              <Avatar className="h-10 w-10 rounded-xl ring-2 ring-background shadow-lg transition-transform duration-300 group-hover:scale-105">
+                <AvatarFallback className="bg-gradient-to-br from-[#003366] to-[#004d99] text-white text-sm font-black tracking-tighter">
                   {initials}
                 </AvatarFallback>
               </Avatar>
-              <div className="text-left hidden md:flex flex-col">
-                <span className="text-[13px] font-semibold leading-tight text-foreground">
+              <div className="text-left hidden md:flex flex-col gap-0.5">
+                <span className="text-[13px] font-bold leading-none text-foreground/90 group-hover:text-primary transition-colors">
                   {user?.fullName || t("admin_user")}
                 </span>
-                <span className="text-[11px] font-medium text-muted-foreground mt-[2px]">
+                <span className="text-[10px] font-black text-muted-foreground/60 uppercase tracking-[0.05em] leading-none">
                   {user?.role || t("administrator")}
                 </span>
               </div>
-              <ChevronDown className="h-4 w-4 text-muted-foreground hidden md:block ml-1 opacity-40 group-hover:opacity-100 transition-opacity" />
+              <ChevronDown className="h-4 w-4 text-muted-foreground/40 hidden md:block ml-1 group-hover:text-foreground group-hover:rotate-180 transition-all duration-300" />
             </button>
           </DropdownMenuTrigger>
 
-          <DropdownMenuContent align="end" className="w-56 mt-2 rounded-xl border-border/60 shadow-xl p-1.5 overflow-hidden" sideOffset={8}>
-            <DropdownMenuLabel className="font-normal flex flex-col space-y-1 p-2 bg-muted/20 rounded-lg mb-1">
-              <p className="text-sm font-semibold leading-none text-foreground">{user?.fullName || t("admin_user")}</p>
-              <p className="text-[12px] text-muted-foreground leading-none mt-1.5">{user?.email || "admin@sst.org"}</p>
+          <DropdownMenuContent align="end" className="w-64 mt-3 rounded-2xl border-border/50 shadow-[0_20px_50px_-12px_rgba(0,0,0,0.15)] p-2 overflow-hidden" sideOffset={8}>
+            <DropdownMenuLabel className="font-normal flex flex-col space-y-2 p-3 bg-muted/30 rounded-xl mb-2">
+              <p className="text-[13px] font-bold leading-none text-foreground">{user?.fullName || t("admin_user")}</p>
+              <p className="text-[11px] text-muted-foreground leading-none font-medium truncate">{user?.email || "admin@sst.org"}</p>
             </DropdownMenuLabel>
-            <DropdownMenuSeparator className="bg-border/40" />
+            <DropdownMenuSeparator className="bg-border/30 mb-1" />
             <DropdownMenuGroup>
-              <DropdownMenuItem className="rounded-lg cursor-pointer text-[13px] font-medium p-2.5 focus:bg-muted/60 transition-colors">
-                <Settings className="mr-2.5 h-4 w-4 text-muted-foreground" />
+              <DropdownMenuItem className="rounded-xl cursor-pointer text-[13px] font-bold p-3 focus:bg-muted/80 transition-colors group">
+                <Settings className="mr-3 h-4 w-4 text-muted-foreground group-hover:text-foreground transition-colors" />
                 <span>{t("account_settings")}</span>
               </DropdownMenuItem>
             </DropdownMenuGroup>
-            <DropdownMenuSeparator className="bg-border/40" />
-            <DropdownMenuItem onClick={signOut} className="rounded-lg cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive text-[13px] font-medium p-2.5 transition-colors">
-              <LogOut className="mr-2.5 h-4 w-4" />
+            <DropdownMenuSeparator className="bg-border/30 my-1" />
+            <DropdownMenuItem onClick={signOut} className="rounded-xl cursor-pointer text-destructive focus:bg-destructive/10 focus:text-destructive text-[13px] font-black p-3 transition-colors group">
+              <LogOut className="mr-3 h-4 w-4 group-hover:translate-x-1 transition-transform" />
               <span>{t("sign_out")}</span>
             </DropdownMenuItem>
           </DropdownMenuContent>

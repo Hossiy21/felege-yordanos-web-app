@@ -3,6 +3,7 @@
 import { useAuth } from "@/lib/auth-context"
 import { AppSidebar } from "@/components/app-sidebar"
 import { TopNav } from "@/components/top-nav"
+import { SidebarProvider, SidebarInset } from "@/components/ui/sidebar"
 import { useRouter } from "next/navigation"
 import { useEffect } from "react"
 
@@ -36,14 +37,16 @@ export default function DashboardLayout({
   }
 
   return (
-    <div className="flex h-screen overflow-hidden">
-      <AppSidebar />
-      <div className="flex flex-col flex-1 overflow-hidden">
-        <TopNav />
-        <main className="flex-1 overflow-y-auto bg-background p-6">
-          {children}
-        </main>
+    <SidebarProvider>
+      <div className="flex h-screen overflow-hidden w-full">
+        <AppSidebar />
+        <SidebarInset className="flex flex-col flex-1 overflow-hidden">
+          <TopNav />
+          <main className="flex-1 overflow-y-auto bg-background p-4 md:p-6">
+            {children}
+          </main>
+        </SidebarInset>
       </div>
-    </div>
+    </SidebarProvider>
   )
 }

@@ -1,10 +1,11 @@
 "use client"
 
 import { useEffect, useState, useMemo } from "react"
+import Link from "next/link"
 import { getAllNews, type NewsArticle } from "@/lib/news-store"
 import { LandingNav } from "@/components/landing/landing-nav"
 import { LandingFooter } from "@/components/landing/landing-footer"
-import { Search, Sparkles } from "lucide-react"
+import { Search, Sparkles, ArrowUpRight } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
@@ -53,50 +54,60 @@ export default function NewsPage() {
             <LandingNav />
 
             <main>
-                {/* Clean Header Section */}
-                <div className="relative pt-32 pb-20 overflow-hidden bg-white dark:bg-slate-900 border-b border-slate-100 dark:border-slate-800">
-                    <div className="mx-auto max-w-7xl px-6 relative z-10">
-                        <div className="flex flex-col items-center text-center max-w-3xl mx-auto space-y-6">
-                            <Badge className="bg-blue-50 text-blue-600 dark:bg-blue-900/30 dark:text-blue-400 border-none px-4 py-1.5 rounded-full uppercase tracking-widest text-[10px] font-bold">
-                                {t('latest_updates')}
-                            </Badge>
+                {/* Premium Immersive Header Section */}
+                <div className="relative pt-32 pb-24 overflow-hidden text-white w-full">
+                    {/* Premium Abstract Gradient Background */}
+                    <div className="absolute inset-0 z-0 bg-[#0a192f]">
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#0a274a] via-[#003366] to-[#001229]" />
 
-                            <h1 className="text-4xl md:text-6xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-tight">
-                                {t('news_events_title')}
-                            </h1>
+                        {/* Subtle architectural grid pattern */}
+                        <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff0a_1px,transparent_1px),linear-gradient(to_bottom,#ffffff0a_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_0%,#000_70%,transparent_100%)]" />
 
-                            <p className="text-lg text-slate-500 dark:text-slate-400 font-medium">
-                                {t('news_subtitle')}
-                            </p>
+                        {/* Colorful ambient orbs */}
+                        <div className="absolute -top-[20%] -right-[10%] w-[500px] h-[500px] bg-[#FFB800]/15 rounded-full blur-[120px]" />
+                        <div className="absolute bottom-[0%] -left-[10%] w-[600px] h-[600px] bg-[#0066cc]/20 rounded-full blur-[130px]" />
+                        <div className="absolute top-[20%] left-[20%] w-[400px] h-[400px] bg-[#60a5fa]/10 rounded-full blur-[100px]" />
+                    </div>
 
-                            {/* Search & Filter Bar */}
-                            <div className="w-full max-w-2xl pt-8">
-                                <div className="p-1.5 rounded-2xl bg-white dark:bg-slate-800 shadow-xl border border-slate-100 dark:border-slate-700 flex flex-col md:flex-row gap-2">
-                                    <div className="relative flex-1 group">
-                                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-slate-300 group-focus-within:text-blue-500 transition-colors" />
-                                        <Input
-                                            placeholder={t('search_news_placeholder')}
-                                            className="bg-transparent border-none text-slate-900 dark:text-white placeholder:text-slate-400 h-12 pl-12 focus-visible:ring-0 focus-visible:ring-offset-0 text-base"
-                                            value={searchQuery}
-                                            onChange={(e) => setSearchQuery(e.target.value)}
-                                        />
-                                    </div>
-                                    <div className="flex gap-2 overflow-x-auto no-scrollbar p-1">
-                                        {categories.slice(0, 4).map((cat) => (
-                                            <button
-                                                key={cat}
-                                                onClick={() => setSelectedCategory(cat)}
-                                                className={cn(
-                                                    "px-5 h-10 rounded-xl text-xs font-bold uppercase tracking-wider transition-all whitespace-nowrap",
-                                                    selectedCategory === cat
-                                                        ? "bg-blue-600 text-white shadow-md shadow-blue-500/20"
-                                                        : "bg-slate-50 text-slate-500 hover:bg-slate-100 dark:bg-slate-700/50 dark:text-slate-400"
-                                                )}
-                                            >
-                                                {cat}
-                                            </button>
-                                        ))}
-                                    </div>
+                    <div className="relative z-10 mx-auto max-w-7xl px-6 text-center animate-in fade-in slide-in-from-bottom-8 duration-1000">
+                        <div className="inline-flex items-center gap-2 rounded-full border border-[#FFB800]/40 bg-[#FFB800]/10 backdrop-blur-md px-4 py-1.5 text-[10px] font-bold text-[#FFB800] uppercase tracking-[0.2em] mb-6 shadow-lg">
+                            <Sparkles className="h-3 w-3" />
+                            {t('latest_updates')}
+                        </div>
+                        <h1 className="text-4xl md:text-7xl font-black tracking-tight mb-6 leading-[1.1] drop-shadow-xl text-balance">
+                            {t('news_events_title')}
+                        </h1>
+                        <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-medium drop-shadow-md">
+                            {t('news_subtitle')}
+                        </p>
+
+                        {/* Search & Filter Bar Section */}
+                        <div className="w-full max-w-2xl mx-auto pt-12">
+                            <div className="p-2 rounded-[2rem] bg-white/10 backdrop-blur-2xl border border-white/20 shadow-2xl flex flex-col md:flex-row gap-2">
+                                <div className="relative flex-1 group">
+                                    <Search className="absolute left-5 top-1/2 -translate-y-1/2 h-5 w-5 text-white/30 group-focus-within:text-[#FFB800] transition-colors" />
+                                    <Input
+                                        placeholder={t('search_news_placeholder')}
+                                        className="bg-transparent border-none text-white placeholder:text-white/40 h-14 pl-14 focus-visible:ring-0 focus-visible:ring-offset-0 text-base font-medium"
+                                        value={searchQuery}
+                                        onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                                </div>
+                                <div className="flex gap-2 overflow-x-auto no-scrollbar p-1 items-center px-2">
+                                    {categories.slice(0, 4).map((cat) => (
+                                        <button
+                                            key={cat}
+                                            onClick={() => setSelectedCategory(cat)}
+                                            className={cn(
+                                                "px-6 h-11 rounded-full text-[11px] font-black uppercase tracking-wider transition-all whitespace-nowrap",
+                                                selectedCategory === cat
+                                                    ? "bg-[#FFB800] text-[#003366] shadow-lg shadow-[#FFB800]/20"
+                                                    : "bg-white/5 text-white/70 hover:bg-white/10"
+                                            )}
+                                        >
+                                            {cat}
+                                        </button>
+                                    ))}
                                 </div>
                             </div>
                         </div>
@@ -139,20 +150,44 @@ export default function NewsPage() {
                     )}
                 </div>
 
-                {/* Simplified Contact Section */}
+                {/* Premium Professional CTA Section */}
                 <section className="pb-32">
                     <div className="mx-auto max-w-7xl px-6">
-                        <div className="relative rounded-3xl bg-blue-600 dark:bg-blue-900/50 overflow-hidden p-12 lg:p-20 text-center text-white">
-                            <div className="relative z-10 max-w-2xl mx-auto space-y-6">
-                                <h2 className="text-3xl md:text-5xl font-bold tracking-tight leading-tight">
+                        <div className="relative rounded-[3rem] overflow-hidden p-12 lg:p-24 text-center text-white border border-white/10 shadow-2xl group">
+                            {/* Premium Abstract Background Wrapper */}
+                            <div className="absolute inset-0 z-0 bg-[#0a192f]">
+                                <div className="absolute inset-0 bg-gradient-to-tr from-[#001229] via-[#003366] to-[#0a274a]" />
+                                
+                                {/* Subtle architectural grid pattern */}
+                                <div className="absolute inset-0 bg-[linear-gradient(to_right,#ffffff05_1px,transparent_1px),linear-gradient(to_bottom,#ffffff05_1px,transparent_1px)] bg-[size:3rem_3rem] [mask-image:radial-gradient(ellipse_60%_50%_at_50%_50%,#000_70%,transparent_100%)]" />
+
+                                {/* Glowing ambient orbs */}
+                                <div className="absolute -top-[20%] -left-[10%] w-[500px] h-[500px] bg-[#FFB800]/10 rounded-full blur-[120px] transition-transform duration-1000 group-hover:scale-110" />
+                                <div className="absolute -bottom-[20%] -right-[10%] w-[600px] h-[600px] bg-[#0066cc]/20 rounded-full blur-[130px] transition-transform duration-1000 group-hover:scale-110" />
+                            </div>
+
+                            <div className="relative z-10 max-w-3xl mx-auto space-y-8">
+                                <div className="inline-flex items-center gap-3 rounded-full border border-white/20 bg-white/10 backdrop-blur-md px-6 py-2 text-xs font-black text-[#FFB800] uppercase tracking-[0.3em] shadow-lg">
+                                    <Sparkles className="h-4 w-4" />
+                                    {t('media_wing')}
+                                </div>
+                                
+                                <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-[1.1] text-balance drop-shadow-2xl">
                                     {t('want_to_submit')}
                                 </h2>
-                                <p className="text-lg text-blue-100 font-medium italic opacity-80 pb-4">
+                                
+                                <p className="text-xl md:text-2xl text-blue-100/80 font-medium leading-relaxed max-w-2xl mx-auto italic drop-shadow-md">
                                     {t('submit_announcement_desc')}
                                 </p>
-                                <Button className="bg-white text-blue-600 hover:bg-blue-50 font-bold px-10 h-14 rounded-xl text-base shadow-xl transition-all uppercase tracking-widest">
-                                    {t('contact_editorial_team')}
-                                </Button>
+
+                                <div className="pt-4">
+                                    <Link href="/contact">
+                                        <Button className="bg-[#FFB800] text-[#003366] hover:bg-white hover:text-[#003366] font-black px-12 h-16 rounded-2xl text-base shadow-2xl transition-all duration-300 uppercase tracking-widest hover:-translate-y-1 hover:shadow-[#FFB800]/20 flex items-center gap-3 mx-auto">
+                                            {t('contact_editorial_team')}
+                                            <ArrowUpRight className="h-5 w-5" />
+                                        </Button>
+                                    </Link>
+                                </div>
                             </div>
                         </div>
                     </div>

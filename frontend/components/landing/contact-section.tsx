@@ -21,12 +21,12 @@ export function ContactSection() {
     {
       icon: Phone,
       label: t("phone"),
-      value: "+251 11 662 0000 / +251 900 000 000",
+      value: t("phone_value"),
     },
     {
       icon: Mail,
       label: t("email"),
-      value: "info@felegeyordanos.org",
+      value: t("email_value"),
     },
   ]
 

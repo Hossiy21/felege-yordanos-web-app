@@ -21,11 +21,24 @@ import { useAuth } from "@/lib/auth-context"
 import { Shield } from "lucide-react"
 import { useState } from "react"
 
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarHeader,
+  SidebarGroup,
+  SidebarGroupLabel,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+  SidebarFooter,
+  useSidebar,
+} from "@/components/ui/sidebar"
+
 export function AppSidebar() {
   const pathname = usePathname()
-  const [collapsed, setCollapsed] = useState(false)
   const { t } = useTranslation()
   const { user } = useAuth()
+  const { isMobile, setOpenMobile } = useSidebar()
 
   const navSections = [
     {
@@ -66,98 +79,86 @@ export function AppSidebar() {
     .map((section) => ({
       ...section,
       items: section.items.filter((item: any) => {
-        // Use authDetails if available, otherwise fallback to user properties
         const userRole = user?.authDetails?.role || user?.role
         const userDept = user?.authDetails?.department || user?.department
-
-        // If user is admin, they see everything
         if (userRole === "admin") return true
-
-        // Check role requirement
         if (item.role && item.role !== userRole) return false
-
-        // Check department requirement (for section or item)
         const itemDept = item.dept || (section as any).dept
         if (itemDept && itemDept !== userDept) return false
-
         return true
       }),
     }))
     .filter((section) => section.items.length > 0)
 
   return (
-    <aside
-      className={cn(
-        "flex flex-col bg-sidebar text-sidebar-foreground border-r border-sidebar-border transition-all duration-300 relative",
-        collapsed ? "w-16" : "w-60"
-      )}
-    >
-      {/* Logo Section */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-sidebar-border">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-foreground font-bold text-sm">
-          SST
-        </div>
-        {!collapsed && (
-          <div className="flex flex-col overflow-hidden">
-            <span className="text-sm font-semibold text-sidebar-accent-foreground truncate">
+    <Sidebar collapsible="icon" className="border-r border-sidebar-border bg-sidebar shadow-xl">
+      <SidebarHeader className="border-b border-sidebar-border p-4">
+        <div className="flex items-center gap-3">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-[#003366] to-[#004080] text-white font-bold text-sm shadow-lg ring-1 ring-white/10">
+            FY
+          </div>
+          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+            <span className="text-sm font-black text-sidebar-accent-foreground tracking-tight truncate leading-none">
               Felege Yordanos
             </span>
-            <span className="text-xs text-sidebar-muted truncate">
+            <span className="text-[10px] font-bold text-sidebar-muted uppercase tracking-widest mt-1.5 opacity-70 truncate">
               {t("sunday_school")}
             </span>
           </div>
-        )}
-      </div>
+        </div>
+      </SidebarHeader>
 
-      {/* Navigation */}
-      <nav className="flex-1 overflow-y-auto py-4 px-2">
+      <SidebarContent className="px-2 py-4 no-scrollbar">
         {filteredSections.map((section) => (
-          <div key={section.label} className="mb-4">
-            {!collapsed && (
-              <p className="px-3 mb-2 text-[10px] font-semibold uppercase tracking-wider text-sidebar-muted">
-                {section.label}
-              </p>
-            )}
-            <ul className="flex flex-col gap-0.5">
+          <SidebarGroup key={section.label} className="mb-2">
+            <SidebarGroupLabel className="px-3 mb-2 text-[10px] font-black uppercase tracking-[0.2em] text-sidebar-muted/60 group-data-[collapsible=icon]:hidden">
+              {section.label}
+            </SidebarGroupLabel>
+            <SidebarMenu>
               {section.items.map((item) => {
                 const isActive =
                   pathname === item.href ||
                   (item.href !== "/dashboard" && pathname.startsWith(item.href))
                 return (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
+                  <SidebarMenuItem key={item.href}>
+                    <SidebarMenuButton
+                      asChild
+                      isActive={isActive}
+                      tooltip={item.name}
+                      onClick={() => isMobile && setOpenMobile(false)}
                       className={cn(
-                        "flex items-center gap-3 px-3 py-2.5 rounded-md text-sm font-medium transition-colors",
-                        isActive
-                          ? "bg-sidebar-accent text-sidebar-accent-foreground"
-                          : "text-sidebar-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-accent-foreground"
+                        "h-11 rounded-lg px-3 transition-all duration-200",
+                        isActive 
+                          ? "bg-[#003366] text-white shadow-md shadow-[#003366]/20" 
+                          : "hover:bg-sidebar-accent/80 hover:scale-[1.02]"
                       )}
                     >
-                      <item.icon className="h-4 w-4 shrink-0" />
-                      {!collapsed && <span className="truncate">{item.name}</span>}
-                    </Link>
-                  </li>
+                      <Link href={item.href} className="flex items-center gap-3">
+                        <item.icon className={cn("h-[18px] w-[18px] shrink-0", isActive ? "text-white" : "text-sidebar-muted")} />
+                        <span className={cn("text-[13px] font-bold", isActive ? "text-white" : "text-sidebar-foreground/80")}>
+                          {item.name}
+                        </span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
                 )
               })}
-            </ul>
-          </div>
+            </SidebarMenu>
+          </SidebarGroup>
         ))}
-      </nav>
+      </SidebarContent>
 
-      {/* Collapse Button */}
-      <button
-        onClick={() => setCollapsed(!collapsed)}
-        className="flex items-center justify-center h-10 border-t border-sidebar-border text-sidebar-muted hover:text-sidebar-accent-foreground transition-colors"
-        aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-      >
-        <ChevronLeft
-          className={cn(
-            "h-4 w-4 transition-transform",
-            collapsed && "rotate-180"
-          )}
-        />
-      </button>
-    </aside>
+      <SidebarFooter className="border-t border-sidebar-border p-4 group-data-[collapsible=icon]:p-2">
+        <div className="bg-sidebar-accent/30 rounded-xl p-3 flex items-center gap-3 group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:bg-transparent">
+          <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <div className="flex flex-col overflow-hidden group-data-[collapsible=icon]:hidden">
+             <span className="text-xs font-bold text-sidebar-foreground truncate">{user?.fullName || "Guest"}</span>
+             <span className="text-[10px] text-sidebar-muted truncate">{user?.role || "Visitor"}</span>
+          </div>
+        </div>
+      </SidebarFooter>
+    </Sidebar>
   )
 }

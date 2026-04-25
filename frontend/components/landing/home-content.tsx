@@ -93,12 +93,12 @@ export function HomeContent() {
     ]
 
     const programs = [
-        { icon: BookOpen, name: "Biblical Studies", desc: "In-depth study of Old and New Testaments" },
-        { icon: Music, name: "Zema — Church Music", desc: "Traditional Ethiopian liturgical chanting" },
-        { icon: GraduationCap, name: "Theology & Doctrine", desc: "Core teachings of the Tewahedo faith" },
-        { icon: HandHeart, name: "Community Service", desc: "Outreach programs serving those in need" },
-        { icon: Flame, name: "Prayer & Fasting", desc: "Guided spiritual disciplines" },
-        { icon: Church, name: "Liturgy & Tradition", desc: "Preserving 2,000-year-old sacred rites" },
+        { icon: BookOpen, name: t("program_biblical"), desc: "In-depth study of Old and New Testaments" },
+        { icon: Music, name: t("program_zema"), desc: "Traditional Ethiopian liturgical chanting" },
+        { icon: GraduationCap, name: t("program_theology"), desc: "Core teachings of the Tewahedo faith" },
+        { icon: HandHeart, name: t("program_community"), desc: "Outreach programs serving those in need" },
+        { icon: Flame, name: t("program_prayer"), desc: "Guided spiritual disciplines" },
+        { icon: Church, name: t("program_liturgy"), desc: "Preserving 2,000-year-old sacred rites" },
     ]
 
     const contactInfo = [
@@ -417,34 +417,7 @@ export function HomeContent() {
             {/* ══════════════════════════════════════════════════════════
           CTA FOOTER BAND
       ══════════════════════════════════════════════════════════ */}
-            <section className="py-24 bg-gradient-to-br from-[#003366] via-[#003d7a] to-[#004080] relative overflow-hidden">
-                <div className="absolute inset-0 opacity-10" aria-hidden>
-                    <div className="absolute -top-40 right-0 h-[500px] w-[500px] rounded-full bg-[#FFB800] blur-3xl" />
-                    <div className="absolute -bottom-20 left-0 h-[300px] w-[300px] rounded-full bg-white blur-3xl" />
-                </div>
-                <div className="relative mx-auto max-w-3xl px-6 text-center">
-                    <h2 className="text-3xl font-extrabold text-white sm:text-4xl text-balance mb-5">
-                        {t("join_sunday_school")} Today
-                    </h2>
-                    <p className="text-white/70 text-lg leading-relaxed mb-10">
-                        Become part of a family rooted in faith, united in love, and committed to the living tradition of
-                        the Ethiopian Orthodox Tewahedo Church.
-                    </p>
-                    <div className="flex flex-wrap justify-center gap-4">
-                        <Link href="/signup">
-                            <Button size="lg" className="bg-[#FFB800] text-[#003366] hover:bg-[#FFB800]/90 font-bold text-base px-8 rounded-full shadow-lg hover:shadow-xl transition-all group">
-                                Enroll Today
-                                <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                            </Button>
-                        </Link>
-                        <Link href="/gallery">
-                            <Button size="lg" variant="outline" className="border-white/30 text-white hover:bg-white/10 font-semibold text-base px-8 rounded-full">
-                                View Gallery
-                            </Button>
-                        </Link>
-                    </div>
-                </div>
-            </section>
+
         </>
     )
 }

@@ -92,16 +92,16 @@ export function DocumentsTable() {
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   Name
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="hidden sm:table-cell text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   Type
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="hidden lg:table-cell text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   Size
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="hidden md:table-cell text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   Uploaded
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="hidden xl:table-cell text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   By
                 </th>
                 <th className="text-right text-xs font-semibold text-muted-foreground px-5 py-3">
@@ -123,7 +123,7 @@ export function DocumentsTable() {
                       </span>
                     </div>
                   </td>
-                  <td className="px-5 py-4">
+                  <td className="hidden sm:table-cell px-5 py-4">
                     <Badge
                       variant="outline"
                       className={`text-xs ${getTypeColor(doc.type)}`}
@@ -131,13 +131,13 @@ export function DocumentsTable() {
                       {doc.type}
                     </Badge>
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
+                  <td className="hidden lg:table-cell px-5 py-4 text-sm text-muted-foreground">
                     {doc.size}
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
+                  <td className="hidden md:table-cell px-5 py-4 text-sm text-muted-foreground">
                     {doc.uploaded}
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
+                  <td className="hidden xl:table-cell px-5 py-4 text-sm text-muted-foreground">
                     {doc.by}
                   </td>
                   <td className="px-5 py-4 text-right">

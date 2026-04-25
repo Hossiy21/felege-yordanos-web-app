@@ -36,34 +36,41 @@ export default function ContactPage() {
                             Contact Us
                         </h1>
                         <p className="text-lg sm:text-xl text-white/80 max-w-2xl mx-auto leading-relaxed font-medium drop-shadow-md">
-                            Whether you want to join our classes, volunteer, or have questions about our Sunday School, we are here to help.
+                            Whether you want to volunteer or have questions about our Sunday School, we are here to help.
                         </p>
                     </div>
                 </div>
 
                 <ContactSection />
 
-                {/* Map Placeholder */}
+                {/* Map Section */}
                 <section className="pb-24 pt-0">
                     <div className="mx-auto max-w-6xl px-6">
-                        <div className="rounded-2xl border border-border bg-muted h-[400px] flex items-center justify-center relative overflow-hidden">
-                            <div className="absolute inset-0 bg-[#003366]/5" />
-                            <div className="text-center z-10 px-6">
-                                <div className="h-12 w-12 rounded-full bg-white shadow-lg flex items-center justify-center mx-auto mb-4 text-[#003366]">
-                                    <svg className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <div className="relative w-full rounded-3xl overflow-hidden border border-border/50 shadow-lg group h-[450px]">
+                            <div className="absolute inset-0 bg-[#003366]/5 group-hover:bg-transparent transition-colors duration-500 z-10 pointer-events-none" />
+                            <iframe
+                                width="100%"
+                                height="100%"
+                                style={{ border: 0 }}
+                                loading="lazy"
+                                allowFullScreen
+                                referrerPolicy="no-referrer-when-downgrade"
+                                src={`https://www.openstreetmap.org/export/embed.html?bbox=38.7759%2C8.9859%2C38.8039%2C9.0059&layer=mapnik&marker=8.9959%2C38.7899`}
+                                className="grayscale-[20%] group-hover:grayscale-0 transition-all duration-700"
+                                title="Medhane Alem Cathedral Location"
+                            />
+                            <div className="absolute bottom-4 right-4 z-20">
+                                <a
+                                    href="https://geohack.toolforge.org/geohack.php?pagename=Medhane_Alem_Cathedral,_Addis_Ababa&params=8.9959_N_38.7899_E_source:openstreetmap_region:ET-AA_type:landmark"
+                                    target="_blank"
+                                    rel="noreferrer"
+                                    className="bg-background/90 backdrop-blur-sm px-4 py-2 rounded-full text-xs font-semibold text-foreground shadow-sm hover:bg-background transition-colors flex items-center gap-2 border border-border/50"
+                                >
+                                    <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
                                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
                                     </svg>
-                                </div>
-                                <h3 className="text-xl font-bold mb-2">Our Location</h3>
-                                <p className="text-muted-foreground">Bole Debre Salem Medhanealem Cathedral, Addis Ababa, Ethiopia</p>
-                                <a
-                                    href="https://maps.google.com"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="mt-6 inline-block text-primary font-bold hover:underline"
-                                >
-                                    Open in Google Maps
+                                    Open in GeoHack
                                 </a>
                             </div>
                         </div>

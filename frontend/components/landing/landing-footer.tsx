@@ -12,7 +12,6 @@ export function LandingFooter() {
       { label: t("about"), href: "/about" },
       { label: t("news_events"), href: "/news" },
       { label: t("gallery"), href: "/gallery" },
-      { label: t("classes"), href: "/classes" },
       { label: t("contact"), href: "/contact" },
     ],
   }

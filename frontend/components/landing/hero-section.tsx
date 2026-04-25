@@ -69,7 +69,15 @@ export function HeroSection() {
         </div>
 
         {/* Scroll indicator */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 animate-bounce">
+        <div 
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 animate-bounce cursor-pointer hover:text-white transition-colors"
+          onClick={() => {
+            window.scrollTo({
+              top: window.innerHeight,
+              behavior: "smooth"
+            })
+          }}
+        >
           <span className="text-[10px] uppercase tracking-widest font-semibold">Scroll</span>
           <ChevronDown className="h-4 w-4" />
         </div>

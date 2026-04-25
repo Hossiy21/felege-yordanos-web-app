@@ -200,12 +200,12 @@ export function AboutContent() {
     ]
 
     const programs = [
-        { icon: BookOpen, name: "Biblical Studies", desc: "In-depth study of the Old and New Testaments" },
-        { icon: Music, name: "Zema — Church Music", desc: "Traditional Ethiopian Orthodox liturgical chanting" },
-        { icon: GraduationCap, name: "Theology & Doctrine", desc: "Core teachings of the Tewahedo faith" },
-        { icon: HandHeart, name: "Community Service", desc: "Outreach programs serving those in need" },
-        { icon: Flame, name: "Prayer & Fasting", desc: "Guided spiritual disciplines and meditations" },
-        { icon: Church, name: "Liturgy & Tradition", desc: "Preserving 2,000-year-old sacred rites" },
+        { icon: BookOpen, name: t("program_biblical"), desc: "In-depth study of the Old and New Testaments" },
+        { icon: Music, name: t("program_zema"), desc: "Traditional Ethiopian Orthodox liturgical chanting" },
+        { icon: GraduationCap, name: t("program_theology"), desc: "Core teachings of the Tewahedo faith" },
+        { icon: HandHeart, name: t("program_community"), desc: "Outreach programs serving those in need" },
+        { icon: Flame, name: t("program_prayer"), desc: "Guided spiritual disciplines and meditations" },
+        { icon: Church, name: t("program_liturgy"), desc: "Preserving 2,000-year-old sacred rites" },
     ]
 
     return (
@@ -281,7 +281,7 @@ export function AboutContent() {
                             <h2 className="text-3xl font-bold text-foreground sm:text-4xl text-balance mb-6">
                                 Bole Medhane Alem Cathedral
                             </h2>
-                            <div className="space-y-4 text-[16px] text-muted-foreground leading-relaxed">
+                            <div className="space-y-4 text-[16px] text-muted-foreground leading-relaxed text-justify">
                                 <p>
                                     Medhane Alem Cathedral (መድኃኔዓለም ካቴድራል), whose name translates to <strong>"Saviour of the World,"</strong> is an Ethiopian Orthodox Tewahedo cathedral located in the Bole area of Addis Ababa, Ethiopia.
                                 </p>
@@ -349,18 +349,17 @@ export function AboutContent() {
                 <div className="mx-auto max-w-6xl px-6">
                     {/* Header */}
                     <div className="text-center mb-16">
-                        <SectionLabel>Organizational Structure</SectionLabel>
+                        <SectionLabel>{t("administration")}</SectionLabel>
                         <h2 className="text-3xl font-bold text-foreground sm:text-4xl text-balance">
-                            Chairman &amp; Leadership Hierarchy
+                            {t("leadership_title")}
                         </h2>
                         <p className="mt-4 max-w-2xl mx-auto text-muted-foreground leading-relaxed">
-                            Our Sunday School is governed by a dedicated leadership structure under the authority of the
-                            cathedral's clergy, ensuring spiritual integrity and effective administration.
+                            {t("leadership_subtitle")}
                         </p>
                     </div>
 
                     {/* Hierarchy Chart — Top Level */}
-                    <div className="flex flex-col items-center gap-0 overflow-x-auto pb-4">
+                    <div className="flex flex-col items-center gap-0 w-full overflow-hidden">
 
                         {/* ── Level 1: Cathedral / Abbot ── */}
                         <div className="flex flex-col items-center">
@@ -380,7 +379,7 @@ export function AboutContent() {
                                 <div className="flex h-12 w-12 items-center justify-center rounded-full bg-[#FFB800] text-[#003366] mb-3">
                                     <Crown className="h-6 w-6" />
                                 </div>
-                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#FFB800] mb-1">Chairman</span>
+                                <span className="text-[10px] font-bold uppercase tracking-widest text-[#FFB800] mb-1">{t("chairman")}</span>
                                 <span className="text-sm font-semibold text-white">Sunday School Chairman</span>
                             </div>
                             {/* Branch line down */}
@@ -389,8 +388,8 @@ export function AboutContent() {
 
                         {/* ── Level 3: Vice + Secretary (wide connector) ── */}
                         <div className="flex flex-col items-center w-full">
-                            {/* Horizontal rail */}
-                            <div className="flex items-start justify-center gap-0 w-full max-w-3xl relative">
+                            {/* Horizontal rail - Hidden on mobile */}
+                            <div className="hidden md:flex items-start justify-center gap-0 w-full max-w-3xl relative">
                                 {/* Left vertical */}
                                 <div className="flex-1 flex justify-end">
                                     <div className="w-px h-8 bg-border" />
@@ -402,15 +401,17 @@ export function AboutContent() {
                                     <div className="w-px h-8 bg-border" />
                                 </div>
                             </div>
-                            <div className="flex flex-wrap justify-center gap-6">
+                            {/* Mobile connector */}
+                            <div className="md:hidden w-px h-8 bg-border" />
+                            <div className="flex flex-col md:flex-row flex-wrap justify-center gap-6">
                                 {[
-                                    { icon: Award, role: "Vice Chairman", desc: "Deputy Head" },
-                                    { icon: UserCheck, role: "Secretary", desc: "Administration" },
-                                    { icon: Shield, role: "Treasurer", desc: "Finance & Funds" },
+                                    { icon: Award, role: t("vice_chairman"), desc: "Deputy Head" },
+                                    { icon: UserCheck, role: t("secretary"), desc: "Administration" },
+                                    { icon: Shield, role: t("treasurer"), desc: "Finance & Funds" },
                                 ].map((item) => (
                                     <div
                                         key={item.role}
-                                        className="flex flex-col items-center text-center px-5 py-4 rounded-xl border border-border bg-card hover:border-[#FFB800]/50 hover:shadow-md hover:-translate-y-0.5 transition-all w-44"
+                                        className="flex flex-col items-center text-center px-5 py-4 rounded-xl border border-border bg-card hover:border-[#FFB800]/50 hover:shadow-md hover:-translate-y-0.5 transition-all w-64 md:w-44"
                                     >
                                         <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#003366]/10 dark:bg-[#FFB800]/10 text-[#003366] dark:text-[#FFB800] mb-2">
                                             <item.icon className="h-5 w-5" />
@@ -429,20 +430,22 @@ export function AboutContent() {
                         <div className="flex flex-col items-center w-full">
                             <div className="w-full max-w-5xl">
                                 <div className="relative flex justify-center">
-                                    {/* Horizontal connector line */}
-                                    <div className="absolute top-0 left-[calc(100%/12)] right-[calc(100%/12)] h-px bg-border" />
+                                    {/* Horizontal connector line - Hidden on mobile */}
+                                    <div className="hidden md:block absolute top-0 left-[calc(100%/12)] right-[calc(100%/12)] h-px bg-border" />
+                                    {/* Mobile connector */}
+                                    <div className="md:hidden w-px h-8 bg-border" />
                                 </div>
-                                <div className="flex flex-wrap justify-center gap-4 pt-0">
+                                <div className="flex flex-col md:flex-row flex-wrap justify-center gap-4 pt-0">
                                     {[
-                                        { icon: BookOpen, dept: "Education Dept.", sub: "Curriculum & Teaching" },
-                                        { icon: Music, dept: "Zema Department", sub: "Liturgical Music" },
-                                        { icon: HandHeart, dept: "Social Affairs", sub: "Community Service" },
-                                        { icon: GraduationCap, dept: "Youth Affairs", sub: "Youth Programs" },
+                                        { icon: BookOpen, dept: t("education_dept"), sub: "Curriculum & Teaching" },
+                                        { icon: Music, dept: t("zema_dept"), sub: "Liturgical Music" },
+                                        { icon: HandHeart, dept: t("social_affairs"), sub: "Community Service" },
+                                        { icon: GraduationCap, dept: t("youth_affairs"), sub: "Youth Programs" },
                                         { icon: Layers, dept: "Sub-Departments", sub: "Class Coordinators" },
                                     ].map((d) => (
                                         <div
                                             key={d.dept}
-                                            className="flex flex-col items-center text-center px-4 py-4 rounded-xl border border-dashed border-border bg-muted/30 hover:bg-card hover:border-[#FFB800]/30 hover:shadow-sm transition-all w-36"
+                                            className="flex flex-col items-center text-center px-4 py-4 rounded-xl border border-dashed border-border bg-muted/30 hover:bg-card hover:border-[#FFB800]/30 hover:shadow-sm transition-all w-64 md:w-36"
                                         >
                                             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-background border border-border text-muted-foreground mb-2">
                                                 <d.icon className="h-4 w-4" />
@@ -491,11 +494,9 @@ export function AboutContent() {
                             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#003366] text-[#FFB800] mb-6 group-hover:scale-105 transition-transform">
                                 <Eye className="h-7 w-7" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground mb-4">Our Vision</h3>
+                            <h3 className="text-xl font-bold text-foreground mb-4">{t("our_vision")}</h3>
                             <p className="text-muted-foreground leading-relaxed text-base">
-                                To nurture a generation of faithful, knowledgeable, and compassionate members of the Ethiopian
-                                Orthodox Tewahedo Church who will carry forward the living tradition of the faith and serve their
-                                church, country, and world with devotion.
+                                {t("our_vision_desc")}
                             </p>
                             <div className="mt-6 pt-6 border-t border-border">
                                 <p className="text-sm font-semibold text-[#003366] dark:text-[#FFB800] italic">
@@ -510,11 +511,9 @@ export function AboutContent() {
                             <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#FFB800] text-[#003366] mb-6 group-hover:scale-105 transition-transform">
                                 <Target className="h-7 w-7" />
                             </div>
-                            <h3 className="text-xl font-bold text-foreground mb-4">Our Mission</h3>
+                            <h3 className="text-xl font-bold text-foreground mb-4">{t("our_mission")}</h3>
                             <p className="text-muted-foreground leading-relaxed text-base">
-                                To provide comprehensive spiritual education rooted in Holy Scripture, Orthodox theology, and
-                                sacred tradition — equipping every student with the knowledge of their faith, a love for liturgy,
-                                and a heart for service to God and neighbour.
+                                {t("our_mission_desc")}
                             </p>
                             <div className="mt-6 pt-6 border-t border-border">
                                 <ul className="space-y-2">
@@ -594,12 +593,12 @@ export function AboutContent() {
             <section id="history" className="py-24 lg:py-32 bg-muted/30 scroll-mt-20">
                 <div className="mx-auto max-w-4xl px-6">
                     <div className="text-center mb-16">
-                        <SectionLabel>Our Journey</SectionLabel>
+                        <SectionLabel>{t("our_history_title")}</SectionLabel>
                         <h2 className="text-3xl font-bold text-foreground sm:text-4xl text-balance">
-                            Our History
+                            {t("our_history_title")}
                         </h2>
                         <p className="mt-4 max-w-2xl mx-auto text-muted-foreground leading-relaxed">
-                            A timeline of faith, growth, and transformation — from the cathedral's founding to today.
+                            {t("our_history_subtitle")}
                         </p>
                     </div>
 

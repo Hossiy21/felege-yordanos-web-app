@@ -181,16 +181,16 @@ export function LetterTable({
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   {t("subject_label")}
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="hidden md:table-cell text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   {t("department")}
                 </th>
                 <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   {t("status")}
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="hidden lg:table-cell text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   {t("date")}
                 </th>
-                <th className="text-left text-xs font-semibold text-muted-foreground px-5 py-3">
+                <th className="hidden xl:table-cell text-left text-xs font-semibold text-muted-foreground px-5 py-3">
                   {t("assigned")}
                 </th>
                 <th className="text-right text-xs font-semibold text-muted-foreground px-5 py-3">
@@ -215,7 +215,7 @@ export function LetterTable({
                   <td className="px-5 py-4 text-sm text-foreground font-medium">
                     {letter.subject}
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
+                  <td className="hidden md:table-cell px-5 py-4 text-sm text-muted-foreground">
                     {letter.department}
                   </td>
                   <td className="px-5 py-4">
@@ -226,10 +226,10 @@ export function LetterTable({
                       {letter.status}
                     </Badge>
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
+                  <td className="hidden lg:table-cell px-5 py-4 text-sm text-muted-foreground">
                     {letter.date}
                   </td>
-                  <td className="px-5 py-4 text-sm text-muted-foreground">
+                  <td className="hidden xl:table-cell px-5 py-4 text-sm text-muted-foreground">
                     {letter.assigned}
                   </td>
                   <td className="px-5 py-4 text-right">

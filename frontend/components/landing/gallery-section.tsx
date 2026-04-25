@@ -100,11 +100,11 @@ export function GallerySection({ isDedicatedPage = false }: GallerySectionProps)
                         {t("gallery")}
                     </div>
                     <h2 className="text-4xl font-black tracking-tight text-white md:text-6xl mb-6 drop-shadow-lg">
-                        ማዕከለ-ስዕላታችን
+                        {t("our_gallery")}
                     </h2>
                     <div className="w-20 h-1.5 bg-[#FFB800] mx-auto rounded-full mb-8 shadow-sm" />
                     <p className="mt-4 text-lg text-white/80 max-w-2xl mx-auto leading-relaxed drop-shadow-md font-medium">
-                        የፈለገ ዮርዳኖስ ሰንበት ትምህርት ቤት መንፈሳዊ ሕይወትና ተግባራት።
+                        {t("gallery_subtitle")}
                     </p>
                 </div>
             </section>
