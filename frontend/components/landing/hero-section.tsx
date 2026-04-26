@@ -42,34 +42,18 @@ export function HeroSection() {
           Felege Yordanos Sunday School
         </p>
 
-        <p className="max-w-2xl text-base sm:text-lg text-white/65 leading-relaxed mb-12 font-medium">
+        <p className="max-w-2xl text-base sm:text-lg text-white/65 leading-relaxed mb-12 font-medium text-justify">
           {t("hero_subtitle")}
         </p>
 
         {/* CTA Buttons */}
         <div className="flex flex-wrap items-center justify-center gap-4">
-          <Link href="/signup">
-            <Button
-              size="lg"
-              className="bg-[#FFB800] text-[#003366] hover:bg-[#FFB800]/90 font-bold text-base px-8 h-12 rounded-full shadow-2xl hover:shadow-[#FFB800]/30 hover:scale-105 transition-all group"
-            >
-              {t("join_sunday_school")}
-              <ArrowRight className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </Link>
-          <Link href="/about">
-            <Button
-              size="lg"
-              variant="outline"
-              className="border-white/40 text-white hover:bg-white/15 font-bold text-base px-8 h-12 rounded-full backdrop-blur-sm"
-            >
-              {t("about_us")}
-            </Button>
-          </Link>
+
+
         </div>
 
         {/* Scroll indicator */}
-        <div 
+        <div
           className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-1 text-white/50 animate-bounce cursor-pointer hover:text-white transition-colors"
           onClick={() => {
             window.scrollTo({

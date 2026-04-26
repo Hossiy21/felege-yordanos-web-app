@@ -236,7 +236,7 @@ export function AboutContent() {
                         About Our
                         <span className="text-[#FFB800]"> Sunday School</span>
                     </h1>
-                    <p className="max-w-3xl mx-auto text-lg sm:text-xl text-white/90 leading-relaxed font-semibold mb-12 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)]">
+                    <p className="max-w-3xl mx-auto text-lg sm:text-xl text-white/90 leading-relaxed font-semibold mb-12 drop-shadow-[0_2px_2px_rgba(0,0,0,0.8)] text-justify">
                         Discover the history, structure, vision, and values of Felege Yordanos — a spiritual community
                         rooted in the Ethiopian Orthodox Tewahedo faith.
                     </p>

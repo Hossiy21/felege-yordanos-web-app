@@ -136,12 +136,12 @@ export function HomeContent() {
                                 Rooted in Faith,{" "}
                                 <span className="text-[#003366] dark:text-[#FFB800]">Growing in Grace</span>
                             </h2>
-                            <p className="text-muted-foreground leading-relaxed mb-5 text-base">
+                            <p className="text-muted-foreground leading-relaxed mb-5 text-base text-justify">
                                 Felege Yordanos — <em>"Stream of Jordan"</em> — is the Sunday School of Bole Debre Salem
                                 Medhanealem Cathedral in Addis Ababa, Ethiopia. For over three decades we have been a spiritual
                                 home for hundreds of young Orthodox believers.
                             </p>
-                            <p className="text-muted-foreground leading-relaxed mb-8 text-base">
+                            <p className="text-muted-foreground leading-relaxed mb-8 text-base text-justify">
                                 Our mission is to nurture the next generation in the living tradition of the Ethiopian Orthodox
                                 Tewahedo Church through Biblical study, liturgy, music, and community service.
                             </p>
@@ -172,19 +172,9 @@ export function HomeContent() {
                                     className="w-full h-full object-cover"
                                 />
                                 <div className="absolute inset-0 bg-gradient-to-t from-[#003366]/60 to-transparent" />
-                                {/* Bottom overlay text */}
-                                <div className="absolute bottom-0 left-0 right-0 p-6">
-                                    <p className="text-white font-bold text-lg leading-tight">
-                                        ቦሌ ደብረ ሳሌም መድኃኔዓለም ካቴድራል
-                                    </p>
-                                    <p className="text-white/70 text-sm mt-1">Addis Ababa, Ethiopia</p>
-                                </div>
+
                             </div>
-                            {/* Floating badge */}
-                            <div className="absolute -bottom-6 -left-6 rounded-2xl bg-[#FFB800] text-[#003366] px-5 py-4 shadow-xl font-bold text-sm leading-tight">
-                                <p className="text-2xl font-extrabold">30+</p>
-                                <p>Years of Service</p>
-                            </div>
+
                         </div>
                     </div>
                 </div>
